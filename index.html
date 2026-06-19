@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trench Defense - Live Build</title>
+    <title>Trench Defense - Premium Edition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.86.0/phaser.min.js"></script>
     <style>
         body {
             margin: 0;
-            background-color: #020610;
+            background-color: #03060f;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             overflow: hidden;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             user-select: none;
         }
         #game-container {
-            box-shadow: 0 0 50px rgba(0, 242, 254, 0.25);
-            border: 1px solid rgba(0, 242, 254, 0.4);
-            border-radius: 16px;
+            box-shadow: 0 15px 50px rgba(0, 242, 254, 0.2);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            border-radius: 20px;
         }
     </style>
 </head>
@@ -34,7 +34,7 @@
         width: 450,
         height: 780,
         parent: 'game-container',
-        backgroundColor: '#030914',
+        backgroundColor: '#040b18',
         physics: {
             default: 'arcade',
             arcade: { debug: false }
@@ -48,7 +48,7 @@
 
     const game = new Phaser.Game(config);
 
-    // Gameplay States
+    // Core States
     let lightOrbs = 150;
     let score = 0;
     let currentLevel = 1;
@@ -56,10 +56,10 @@
     let totalEnemiesInLevel = 10;
     let currentSelection = 'seahorse';
 
-    // UI elements
-    let lightText, scoreText, levelText;
+    // UI Objects
+    let lightText, scoreText, levelText, waveProgressText;
     let progressBarFill;
-    let bg1, bg2, bg3; // Card background boxes
+    let bg1, bg2, bg3; 
 
     // Logic Groups
     let bullets, scavengers, defenders;
@@ -74,31 +74,30 @@
         scavengers = scene.physics.add.group();
         defenders = scene.physics.add.group();
 
-        // 1. ESTABLISH SCI-FI BIOLUMINESCENT BACKGROUND
-        // Layered deep ocean gradient
+        // 1. ATMOSPHERIC GRAPHICS DEEP OCEAN
         let deepBg = scene.add.graphics();
-        deepBg.fillGradientStyle(0x020713, 0x020713, 0x05172b, 0x05172b, 1);
+        deepBg.fillGradientStyle(0x020714, 0x020714, 0x041324, 0x041324, 1);
         deepBg.fillRect(0, 0, 450, 780);
 
-        // Ambient trench sonar lines for technological look
-        deepBg.lineStyle(1, 0x00f2fe, 0.04);
-        for(let i = 0; i < 450; i += 40) {
+        // Grid scan lines for premium look
+        deepBg.lineStyle(1, 0x00f2fe, 0.03);
+        for(let i = 0; i <= 450; i += 45) {
             deepBg.strokeLineShape(new Phaser.Geom.Line(i, 0, i, 780));
         }
 
-        // 2. MOTHER REEF COATED SAFETY RADAR
+        // 2. REEF GUARD INTERFACE LINE
         let reefBg = scene.add.graphics();
-        reefBg.fillGradientStyle(0x000000, 0x000000, 0x002e26, 0x002e26, 0.8);
-        reefBg.fillRect(0, 640, 450, 60);
-        reefBg.lineStyle(2, 0x00ffc8, 0.3);
-        reefBg.strokeLineShape(new Phaser.Geom.Line(0, 640, 450, 640));
-        scene.add.text(225, 670, '🛡️ MOTHER REEF SHIELD ACTIVE 🛡️', { fontSize: '13px', fill: '#00ffc8', fontWeight: 'bold', letterSpacing: 3 }).setOrigin(0.5);
+        reefBg.fillGradientStyle(0x020714, 0x020714, 0x001f1b, 0x001f1b, 0.9);
+        reefBg.fillRect(0, 630, 450, 65);
+        reefBg.lineStyle(1, 0x00ffc8, 0.25);
+        reefBg.strokeLineShape(new Phaser.Geom.Line(0, 630, 450, 630));
+        scene.add.text(225, 662, '🛡️ MOTHER REEF SHIELD ACTIVE', { fontSize: '12px', fill: '#00ffc8', fontWeight: '700', letterSpacing: 2 }).setOrigin(0.5);
 
-        // 3. TACTICAL GRID GENERATION
+        // 3. MATHEMATICALLY BALANCED TACTICAL GRID
         const startX = 45;
-        const startY = 160;
+        const startY = 175;
         const cellWidth = 72;
-        const cellHeight = 76;
+        const cellHeight = 74;
 
         for (let row = 0; row < 6; row++) {
             for (let col = 0; col < 5; col++) {
@@ -106,11 +105,10 @@
                 let y = startY + (row * cellHeight);
 
                 let cellGraphic = scene.add.graphics();
-                // Subtle glowing grid squares
-                cellGraphic.fillStyle(0x00f2fe, 0.015);
-                cellGraphic.fillRect(x - cellWidth/2 + 2, y - cellHeight/2 + 2, cellWidth - 4, cellHeight - 4);
-                cellGraphic.lineStyle(1, 0x00f2fe, 0.08);
-                cellGraphic.strokeRect(x - cellWidth/2 + 2, y - cellHeight/2 + 2, cellWidth - 4, cellHeight - 4);
+                cellGraphic.fillStyle(0x00f2fe, 0.012);
+                cellGraphic.fillRoundedRect(x - cellWidth/2 + 3, y - cellHeight/2 + 3, cellWidth - 6, cellHeight - 6, 6);
+                cellGraphic.lineStyle(1, 0x00f2fe, 0.07);
+                cellGraphic.strokeRoundedRect(x - cellWidth/2 + 3, y - cellHeight/2 + 3, cellWidth - 6, cellHeight - 6, 6);
 
                 let hitZone = scene.add.zone(x, y, cellWidth, cellHeight).setInteractive();
                 hitZone.setData('occupied', false);
@@ -129,7 +127,7 @@
                         if (currentSelection === 'coral') { emoji = '🪸'; hp = 60; }
                         if (currentSelection === 'clam') { emoji = '🦪'; hp = 450; }
 
-                        let defText = scene.add.text(x, y, emoji, { fontSize: '34px' }).setOrigin(0.5);
+                        let defText = scene.add.text(x, y, emoji, { fontSize: '32px' }).setOrigin(0.5);
                         scene.physics.add.existing(defText);
                         defText.setData('hp', hp);
                         defText.setData('type', currentSelection);
@@ -140,7 +138,7 @@
                         scene.tweens.add({
                             targets: defText,
                             scaleX: 1, scaleY: 1,
-                            duration: 250,
+                            duration: 200,
                             ease: 'Back.easeOut'
                         });
 
@@ -149,7 +147,7 @@
                                 delay: 1400,
                                 callback: () => {
                                     if (!defText.active) return;
-                                    let b = scene.add.circle(x, y - 20, 6, 0x00f2fe);
+                                    let b = scene.add.circle(x, y - 20, 5, 0x00f2fe);
                                     bullets.add(b);
                                     b.body.setVelocityY(-380);
                                 },
@@ -160,84 +158,102 @@
                                 delay: 4500,
                                 callback: () => {
                                     if (!defText.active) return;
-                                    spawnOrb(scene, x + Phaser.Math.Between(-15, 15), y + Phaser.Math.Between(-15, 15));
+                                    spawnOrb(scene, x + Phaser.Math.Between(-12, 12), y + Phaser.Math.Between(-12, 12));
                                 },
                                 loop: true
                             });
                         }
+                        updateUISlice();
                     }
                 });
             }
         }
 
-        // 4. HEADER CONTROL HUD PLATFORM
+        // 4. BALANCED PREMIUM HEAD HUD PANEL
         let hudBg = scene.add.graphics();
-        hudBg.fillStyle(0x01040a, 0.9);
-        hudBg.fillRect(0, 0, 450, 105);
-        hudBg.lineStyle(1, 0x00f2fe, 0.2);
-        hudBg.strokeLineShape(new Phaser.Geom.Line(0, 105, 450, 105));
+        hudBg.fillStyle(0x020611, 0.95);
+        hudBg.fillRect(0, 0, 450, 115);
+        hudBg.lineStyle(1, 0x00f2fe, 0.15);
+        hudBg.strokeLineShape(new Phaser.Geom.Line(0, 115, 450, 115));
 
-        lightText = scene.add.text(25, 20, '✨ Light: ' + lightOrbs, { fontSize: '20px', fill: '#fffb00', fontWeight: 'bold' });
-        scoreText = scene.add.text(25, 52, '🏆 Score: ' + score, { fontSize: '14px', fill: '#a0aec0' });
-        levelText = scene.add.text(425, 20, 'LEVEL ' + currentLevel, { fontSize: '20px', fill: '#00f2fe', fontWeight: 'bold' }).setOrigin(1, 0);
+        // Subtly enclosed dashboard capsules
+        lightText = scene.add.text(25, 24, '✨ ' + lightOrbs, { fontSize: '20px', fill: '#fffb00', fontWeight: '700' });
+        scoreText = scene.add.text(25, 58, '🏆 ' + score, { fontSize: '14px', fill: '#a0aec0', fontWeight: '500' });
+        levelText = scene.add.text(425, 22, 'LEVEL ' + currentLevel, { fontSize: '18px', fill: '#00f2fe', fontWeight: '800', letterSpacing: 1 }).setOrigin(1, 0);
 
-        // Level Progression Progress Bar Graphic
-        scene.add.text(240, 55, 'Wave Progress', { fontSize: '11px', fill: '#718096' });
+        waveProgressText = scene.add.text(425, 58, 'WAVE PROGRESS', { fontSize: '10px', fill: '#4a5568', fontWeight: '700', letterSpacing: 1 }).setOrigin(1, 0);
         let progressBarBg = scene.add.graphics();
-        progressBarBg.fillStyle(0x1a202c, 1);
-        progressBarBg.fillRoundedRect(240, 70, 185, 8, 4);
+        progressBarBg.fillStyle(0x131924, 1);
+        progressBarBg.fillRoundedRect(25, 88, 400, 6, 3);
         progressBarFill = scene.add.graphics();
 
-        // 5. MODERN COMMAND CARDS DECK LAYOUT
+        // 5. FLOATING TACTICAL COMMAND DECKS
         let deckBg = scene.add.graphics();
-        deckBg.fillStyle(0x020610, 1);
-        deckBg.fillRect(0, 700, 450, 80);
-        deckBg.lineStyle(1, 0x00f2fe, 0.15);
-        deckBg.strokeLineShape(new Phaser.Geom.Line(0, 700, 450, 700));
+        deckBg.fillStyle(0x020611, 1);
+        deckBg.fillRect(0, 695, 450, 85);
+        deckBg.lineStyle(1, 0x00f2fe, 0.12);
+        deckBg.strokeLineShape(new Phaser.Geom.Line(0, 695, 450, 695));
 
         // Card 1: Seahorse
-        cardSeahorse = scene.add.container(90, 740);
-        bg1 = scene.add.rectangle(0, 0, 80, 62, 0x091424).setStrokeStyle(2, 0x00f2fe).setInteractive();
-        cardSeahorse.add([bg1, scene.add.text(0, -11, '🐴', { fontSize: '24px' }).setOrigin(0.5), scene.add.text(0, 15, '50 LGT', { fontSize: '11px', fill: '#fffb00', fontWeight: 'bold' }).setOrigin(0.5)]);
-        bg1.on('pointerdown', () => selectCard('seahorse'));
+        cardSeahorse = scene.add.container(85, 738);
+        bg1 = scene.add.graphics();
+        cardSeahorse.add(bg1);
+        cardSeahorse.add([scene.add.text(0, -10, '🐴', { fontSize: '24px' }).setOrigin(0.5), scene.add.text(0, 16, '50 LGT', { fontSize: '10px', fill: '#fffb00', fontWeight: '700' }).setOrigin(0.5)]);
+        let zone1 = scene.add.zone(85, 738, 82, 60).setInteractive();
+        zone1.on('pointerdown', () => selectCard('seahorse'));
 
         // Card 2: Coral
-        cardCoral = scene.add.container(225, 740);
-        bg2 = scene.add.rectangle(0, 0, 80, 62, 0x091424).setStrokeStyle(1, 0x1a2a40).setInteractive();
-        cardCoral.add([bg2, scene.add.text(0, -11, '🪸', { fontSize: '24px' }).setOrigin(0.5), scene.add.text(0, 15, '25 LGT', { fontSize: '11px', fill: '#fffb00', fontWeight: 'bold' }).setOrigin(0.5)]);
-        bg2.on('pointerdown', () => selectCard('coral'));
+        cardCoral = scene.add.container(225, 738);
+        bg2 = scene.add.graphics();
+        cardCoral.add(bg2);
+        cardCoral.add([scene.add.text(0, -10, '🪸', { fontSize: '24px' }).setOrigin(0.5), scene.add.text(0, 16, '25 LGT', { fontSize: '10px', fill: '#fffb00', fontWeight: '700' }).setOrigin(0.5)]);
+        let zone2 = scene.add.zone(225, 738, 82, 60).setInteractive();
+        zone2.on('pointerdown', () => selectCard('coral'));
 
         // Card 3: Clam
-        cardClam = scene.add.container(360, 740);
-        bg3 = scene.add.rectangle(0, 0, 80, 62, 0x091424).setStrokeStyle(1, 0x1a2a40).setInteractive();
-        cardClam.add([bg3, scene.add.text(0, -11, '🦪', { fontSize: '24px' }).setOrigin(0.5), scene.add.text(0, 15, '75 LGT', { fontSize: '11px', fill: '#fffb00', fontWeight: 'bold' }).setOrigin(0.5)]);
-        bg3.on('pointerdown', () => selectCard('clam'));
+        cardClam = scene.add.container(365, 738);
+        bg3 = scene.add.graphics();
+        cardClam.add(bg3);
+        cardClam.add([scene.add.text(0, -10, '🦪', { fontSize: '24px' }).setOrigin(0.5), scene.add.text(0, 16, '75 LGT', { fontSize: '10px', fill: '#fffb00', fontWeight: '700' }).setOrigin(0.5)]);
+        let zone3 = scene.add.zone(365, 738, 82, 60).setInteractive();
+        zone3.on('pointerdown', () => selectCard('clam'));
 
         function selectCard(type) {
             currentSelection = type;
-            bg1.setStrokeStyle(type === 'seahorse' ? 2 : 1, type === 'seahorse' ? 0x00f2fe : 0x1a2a40);
-            bg2.setStrokeStyle(type === 'coral' ? 2 : 1, type === 'coral' ? 0x00f2fe : 0x1a2a40);
-            bg3.setStrokeStyle(type === 'clam' ? 2 : 1, type === 'clam' ? 0x00f2fe : 0x1a2a40);
+            updateUISlice();
         }
 
-        // Ambient Resource Spawns
+        // Ambient Resource loop
         scene.time.addEvent({
             delay: 4500,
-            callback: () => spawnOrb(scene, Phaser.Math.Between(40, 410), Phaser.Math.Between(150, 550)),
+            callback: () => spawnOrb(scene, Phaser.Math.Between(40, 410), Phaser.Math.Between(160, 540)),
             loop: true
         });
 
-        // Initialize Wave Engine Loop
         startLevelEngine(scene);
 
-        // Core Collision Handler
+        // Bullets Impact & Combat
         scene.physics.add.overlap(bullets, scavengers, (bullet, enemy) => {
+            let hitX = bullet.x;
+            let hitY = bullet.y;
             bullet.destroy();
+
             let currentHp = enemy.getData('hp') - 25;
             enemy.setData('hp', currentHp);
 
+            // Red flashing visual feedback
             enemy.setTint(0xff3b30);
             scene.time.delayedCall(80, () => { if(enemy.active) enemy.clearTint(); });
+
+            // Animated Damage Numbers Popup
+            let dmgPopup = scene.add.text(hitX, hitY - 15, '-25', { fontSize: '14px', fill: '#ff3b30', fontWeight: '700' }).setOrigin(0.5);
+            scene.tweens.add({
+                targets: dmgPopup,
+                y: hitY - 40,
+                alpha: 0,
+                duration: 600,
+                onComplete: () => dmgPopup.destroy()
+            });
 
             if (currentHp <= 0) {
                 enemy.destroy();
@@ -245,14 +261,13 @@
                 enemiesDefeatedInLevel++;
                 updateUISlice();
 
-                // Check Level Win Status
                 if (enemiesDefeatedInLevel >= totalEnemiesInLevel) {
                     advanceNextLevel(scene);
                 }
             }
         });
 
-        // Eating Combat Collisions
+        // Eating Combat Logic
         scene.physics.add.overlap(scavengers, defenders, (enemy, defender) => {
             enemy.body.setVelocityY(0);
             if (!enemy.getData('eating')) {
@@ -284,16 +299,17 @@
                 });
             }
         });
+
+        // Force initialize card UI layouts
+        updateUISlice();
     }
 
-    // LEVEL LOGIC MANAGERS
     function startLevelEngine(scene) {
-        totalEnemiesInLevel = 8 + (currentLevel * 4); // Each level gets progressively longer
+        totalEnemiesInLevel = 8 + (currentLevel * 4);
         enemiesDefeatedInLevel = 0;
         updateUISlice();
 
-        let spawnDelay = Math.max(1500, 4500 - (currentLevel * 400)); // Level up makes enemies spawn faster!
-
+        let spawnDelay = Math.max(1400, 4200 - (currentLevel * 400));
         if (spawnTimer) spawnTimer.destroy();
 
         let spawnedCount = 0;
@@ -305,12 +321,12 @@
                 let lane = Phaser.Math.Between(0, 4);
                 let enemyX = 45 + (lane * 72);
                 
-                let isHard = Math.random() < (0.15 + (currentLevel * 0.05)); // Harder enemies appear more frequently as level increases
+                let isHard = Math.random() < (0.15 + (currentLevel * 0.05));
                 let enemyEmoji = isHard ? '📦' : '🦀';
-                let enemyHp = isHard ? 120 : 50;
-                let speed = (isHard ? 28 : 42) + (currentLevel * 3); // Enemies accelerate each level
+                let enemyHp = isHard ? 125 : 50;
+                let speed = (isHard ? 28 : 42) + (currentLevel * 3);
 
-                let enemy = scene.add.text(enemyX, -20, enemyEmoji, { fontSize: '30px' }).setOrigin(0.5);
+                let enemy = scene.add.text(enemyX, -20, enemyEmoji, { fontSize: '28px' }).setOrigin(0.5);
                 scene.physics.add.existing(enemy);
                 enemy.setData('hp', enemyHp);
                 enemy.setData('speed', speed);
@@ -325,28 +341,37 @@
 
     function advanceNextLevel(scene) {
         spawnTimer.destroy();
-        // Clear lingering bullets or remaining stray units safely
         scavengers.clear(true, true);
         bullets.clear(true, true);
 
         currentLevel++;
         
-        let winText = scene.add.text(225, 390, 'LEVEL COMPLETED!\nTrench Secured.', { fontSize: '28px', fill: '#00ffc8', align: 'center', fontWeight: 'bold' }).setOrigin(0.5);
+        let winText = scene.add.text(225, 380, 'TRENCH SECURED\nLEVEL ' + (currentLevel - 1) + ' COMPLETE', { 
+            fontSize: '24px', fill: '#00ffc8', align: 'center', fontWeight: '800', letterSpacing: 2 
+        }).setOrigin(0.5);
         
-        scene.time.delayedCall(2500, () => {
+        winText.setScale(0);
+        scene.tweens.add({
+            targets: winText,
+            scaleX: 1, scaleY: 1,
+            duration: 300,
+            ease: 'Back.easeOut'
+        });
+
+        scene.time.delayedCall(2600, () => {
             winText.destroy();
             startLevelEngine(scene);
         });
     }
 
     function spawnOrb(scene, x, y) {
-        let orb = scene.add.circle(x, y, 15, 0xfffb00).setInteractive();
+        let orb = scene.add.circle(x, y, 14, 0xfffb00).setInteractive();
         scene.physics.add.existing(orb);
         orb.body.setAllowGravity(false);
 
         scene.tweens.add({
             targets: orb,
-            alpha: 0.3, scale: 1.25,
+            alpha: 0.3, scale: 1.2,
             duration: 800, yoyo: true, repeat: -1
         });
 
@@ -357,32 +382,44 @@
         });
     }
 
+    function drawCardBackground(gfx, isSelected, canAfford) {
+        gfx.clear();
+        let strokeColor = isSelected ? 0x00f2fe : 0x182438;
+        let strokeAlpha = isSelected ? 1 : 0.6;
+        let fillColor = canAfford ? 0x0a1626 : 0x060c14;
+
+        gfx.fillStyle(fillColor, 1);
+        gfx.fillRoundedRect(-41, -30, 82, 60, 8);
+        gfx.lineStyle(isSelected ? 2 : 1, strokeColor, strokeAlpha);
+        gfx.strokeRoundedRect(-41, -30, 82, 60, 8);
+    }
+
     function updateUISlice() {
-        lightText.setText('✨ Light: ' + lightOrbs);
-        scoreText.setText('🏆 Score: ' + score);
+        if (!lightText) return;
+
+        lightText.setText('✨ ' + lightOrbs);
+        scoreText.setText('🏆 ' + score);
         levelText.setText('LEVEL ' + currentLevel);
 
-        // Update Level progress slider
         progressBarFill.clear();
         progressBarFill.fillStyle(0x00f2fe, 1);
         let ratio = Math.min(1, enemiesDefeatedInLevel / totalEnemiesInLevel);
-        progressBarFill.fillRoundedRect(240, 70, 185 * ratio, 8, 4);
+        progressBarFill.fillRoundedRect(25, 88, 400 * ratio, 6, 3);
 
-        // Highlight card edges conditionally if player can afford them
-        if(bg1) bg1.setFillStyle(lightOrbs >= 50 ? '#0d223a' : '#091424');
-        if(bg2) bg2.setFillStyle(lightOrbs >= 25 ? '#0d223a' : '#091424');
-        if(bg3) bg3.setFillStyle(lightOrbs >= 75 ? '#0d223a' : '#091424');
+        if (bg1) drawCardBackground(bg1, currentSelection === 'seahorse', lightOrbs >= 50);
+        if (bg2) drawCardBackground(bg2, currentSelection === 'coral', lightOrbs >= 25);
+        if (bg3) drawCardBackground(bg3, currentSelection === 'clam', lightOrbs >= 75);
     }
 
     function update() {
         bullets.getChildren().forEach(b => {
-            if (b && b.y < 110) b.destroy();
+            if (b && b.y < 120) b.destroy();
         });
 
         scavengers.getChildren().forEach(e => {
-            if (e && e.y > 640) {
+            if (e && e.y > 630) {
                 e.destroy();
-                alert('Trench Overrun! Defeat at Level ' + currentLevel + '. Final Score: ' + score);
+                alert('Trench Overrun! Defeat at Level ' + currentLevel + '.\nFinal Score: ' + score);
                 location.reload();
             }
         });

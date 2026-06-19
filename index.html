@@ -3,23 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trench Defense - Prototype</title>
+    <title>Trench Defense - Production Slice</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.86.0/phaser.min.js"></script>
     <style>
         body {
             margin: 0;
-            background-color: #050b14;
+            background-color: #03070e;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             overflow: hidden;
-            font-family: sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
         }
         #game-container {
-            box-shadow: 0 0 30px rgba(0, 255, 200, 0.2);
+            box-shadow: 0 0 40px rgba(0, 255, 200, 0.3);
             border: 2px solid #00ffc8;
-            border-radius: 8px;
+            border-radius: 12px;
         }
     </style>
 </head>
@@ -31,9 +32,9 @@
     const config = {
         type: Phaser.AUTO,
         width: 450,
-        height: 750,
+        height: 780,
         parent: 'game-container',
-        backgroundColor: '#0a1526',
+        backgroundColor: '#050c14',
         physics: {
             default: 'arcade',
             arcade: { debug: false }
@@ -47,146 +48,302 @@
 
     const game = new Phaser.Game(config);
 
-    let lightOrbs = 100;
+    // Game Variables
+    let lightOrbs = 150;
     let lightText;
+    let score = 0;
+    let scoreText;
+    let currentSelection = 'seahorse'; // 'seahorse', 'coral', 'clam'
+    
+    // Cards UI Objects
+    let cardSeahorse, cardCoral, cardClam;
+
+    // Groups
     let bullets;
     let scavengers;
     let defenders;
+    let particles;
 
     function preload() {}
 
     function create() {
         const scene = this;
+
+        // Setup Physics Groups
         bullets = scene.physics.add.group();
         scavengers = scene.physics.add.group();
         defenders = scene.physics.add.group();
+        
+        // Impact Particle Emitter Setup (Procedural Glow Effects)
+        particles = scene.add.graphics();
 
-        // Mother Reef Goal Zone
+        // 1. Mother Reef Bottom Goal Zone
         let reefBg = scene.add.graphics();
-        reefBg.fillStyle(0x00ffc8, 0.15);
-        reefBg.fillRect(0, 680, 450, 70);
-        scene.add.text(225, 715, '⚓ MOTHER REEF ⚓', { fontSize: '18px', fill: '#00ffc8', fontWeight: 'bold' }).setOrigin(0.5);
+        reefBg.fillGradientStyle(0x001a1a, 0x001a1a, 0x005f4e, 0x005f4e, 1);
+        reefBg.fillRect(0, 640, 450, 60);
+        scene.add.text(225, 670, '⚓ PROTECT THE MOTHER REEF ⚓', { fontSize: '14px', fill: '#00ffc8', fontWeight: 'bold', letterSpacing: 2 }).setOrigin(0.5);
 
-        // 5-Lane Grid Setup
+        // 2. Draw 5-Lane Tactical Grid
         const startX = 45;
-        const startY = 120;
+        const startY = 150;
         const cellWidth = 72;
-        const cellHeight = 90;
+        const cellHeight = 78;
 
         for (let row = 0; row < 6; row++) {
             for (let col = 0; col < 5; col++) {
                 let x = startX + (col * cellWidth);
                 let y = startY + (row * cellHeight);
 
+                // Grid Square Graphic
                 let cellGraphic = scene.add.graphics();
-                cellGraphic.lineStyle(1, 0x1d3557, 0.5);
+                cellGraphic.lineStyle(1, 0x00f5ff, 0.15);
                 cellGraphic.strokeRect(x - cellWidth/2, y - cellHeight/2, cellWidth, cellHeight);
 
+                // Click Grid to Deploy Selected Creature
                 let hitZone = scene.add.zone(x, y, cellWidth, cellHeight).setInteractive();
                 hitZone.setData('occupied', false);
 
                 hitZone.on('pointerdown', () => {
-                    if (!hitZone.getData('occupied') && lightOrbs >= 50) {
-                        lightOrbs -= 50;
-                        lightText.setText('✨ Light: ' + lightOrbs);
+                    if (hitZone.getData('occupied')) return;
+
+                    let cost = currentSelection === 'seahorse' ? 50 : currentSelection === 'coral' ? 25 : 75;
+                    
+                    if (lightOrbs >= cost) {
+                        lightOrbs -= cost;
+                        updateUI();
                         hitZone.setData('occupied', true);
                         
-                        // Spawn defender directly as text object
-                        let defender = scene.add.text(x, y, '🐴', { fontSize: '32px' }).setOrigin(0.5);
-                        defenders.add(defender);
+                        let emoji = '🐴';
+                        let hp = 100;
+                        if (currentSelection === 'coral') { emoji = '🪸'; hp = 60; }
+                        if (currentSelection === 'clam') { emoji = '🦪'; hp = 400; } // Heavy tank
 
-                        // Idle squishy stretch animation
+                        // Create Defender Text Entity
+                        let defText = scene.add.text(x, y, emoji, { fontSize: '34px' }).setOrigin(0.5);
+                        scene.physics.add.existing(defText);
+                        defText.setData('hp', hp);
+                        defText.setData('type', currentSelection);
+                        defText.setData('gridZone', hitZone);
+                        defenders.add(defText);
+
+                        // Placement animation punch
+                        defText.setScale(0);
                         scene.tweens.add({
-                            targets: defender,
-                            scaleY: 1.2,
-                            scaleX: 0.85,
-                            duration: 600,
-                            yoyo: true,
-                            repeat: -1,
-                            ease: 'Sine.easeInOut'
+                            targets: defText,
+                            scaleX: 1,
+                            scaleY: 1,
+                            duration: 200,
+                            ease: 'Back.easeOut',
+                            onComplete: () => {
+                                // Idle squish loop
+                                scene.tweens.add({
+                                    targets: defText,
+                                    scaleY: 1.15,
+                                    scaleX: 0.9,
+                                    duration: 600 + Math.random()*200,
+                                    yoyo: true,
+                                    repeat: -1,
+                                    ease: 'Sine.easeInOut'
+                                });
+                            }
                         });
 
-                        // Projectile firing timer
-                        scene.time.addEvent({
-                            delay: 1800,
-                            callback: () => {
-                                if (!defender.active) return;
-                                if (scavengers.getLength() > 0) {
+                        // Action Hooks based on Identity
+                        if (currentSelection === 'seahorse') {
+                            // Fire straight bullet stream
+                            scene.time.addEvent({
+                                delay: 1500,
+                                callback: () => {
+                                    if (!defText.active) return;
                                     let b = scene.add.circle(x, y - 20, 6, 0x00f5ff);
                                     bullets.add(b);
-                                    b.body.setVelocityY(-350); // Fast projectiles
-                                }
-                            },
-                            loop: true
-                        });
+                                    b.body.setVelocityY(-350);
+                                },
+                                loop: true
+                            });
+                        } else if (currentSelection === 'coral') {
+                            // Local Passive Energy Generation
+                            scene.time.addEvent({
+                                delay: 5000,
+                                callback: () => {
+                                    if (!defText.active) return;
+                                    spawnOrb(scene, x + Phaser.Math.Between(-15, 15), y + Phaser.Math.Between(-15, 15));
+                                },
+                                loop: true
+                            });
+                        }
                     }
                 });
             }
         }
 
-        // Interface UI
-        lightText = scene.add.text(20, 20, '✨ Light: ' + lightOrbs, { fontSize: '22px', fill: '#fffb00', fontWeight: 'bold' });
-        scene.add.text(20, 50, 'Click grid to place Seahorse (Cost: 50)', { fontSize: '12px', fill: '#8fa0ba' });
+        // 3. Header HUD Dashboard
+        let hudBg = scene.add.graphics();
+        hudBg.fillStyle(0x02050a, 0.85);
+        hudBg.fillRect(0, 0, 450, 95);
+        hudBg.lineStyle(2, 0x00f5ff, 0.3);
+        hudBg.strokeLineShape(new Phaser.Geom.Line(0, 95, 450, 95));
 
-        // Energy Spawning Engine
+        lightText = scene.add.text(25, 20, '✨ Light: ' + lightOrbs, { fontSize: '22px', fill: '#fffb00', fontWeight: 'bold' });
+        scoreText = scene.add.text(25, 55, '🏆 Score: ' + score, { fontSize: '15px', fill: '#00ffc8' });
+
+        // 4. Interactive Command Card Deck Layout (Bottom Menu Selectors)
+        let deckBg = scene.add.graphics();
+        deckBg.fillStyle(0x050c14, 1);
+        deckBg.fillRect(0, 700, 450, 80);
+
+        cardSeahorse = scene.add.container(90, 740);
+        let bg1 = scene.add.rectangle(0, 0, 75, 60, 0x0d2236).setStrokeStyle(2, 0x00ffc8).setInteractive();
+        let txt1 = scene.add.text(0, -12, '🐴', { fontSize: '24px' }).setOrigin(0.5);
+        let cost1 = scene.add.text(0, 14, '50 Lgt', { fontSize: '11px', fill: '#fffb00' }).setOrigin(0.5);
+        cardSeahorse.add([bg1, txt1, cost1]);
+        bg1.on('pointerdown', () => selectCard('seahorse'));
+
+        cardCoral = scene.add.container(225, 740);
+        let bg2 = scene.add.rectangle(0, 0, 75, 60, 0x0d2236).setStrokeStyle(1, 0x113454).setInteractive();
+        let txt2 = scene.add.text(0, -12, '🪸', { fontSize: '24px' }).setOrigin(0.5);
+        let cost2 = scene.add.text(0, 14, '25 Lgt', { fontSize: '11px', fill: '#fffb00' }).setOrigin(0.5);
+        cardCoral.add([bg2, txt2, cost2]);
+        bg2.on('pointerdown', () => selectCard('coral'));
+
+        cardClam = scene.add.container(360, 740);
+        let bg3 = scene.add.rectangle(0, 0, 75, 60, 0x0d2236).setStrokeStyle(1, 0x113454).setInteractive();
+        let txt3 = scene.add.text(0, -12, '🦪', { fontSize: '24px' }).setOrigin(0.5);
+        let cost3 = scene.add.text(0, 14, '75 Lgt', { fontSize: '11px', fill: '#fffb00' }).setOrigin(0.5);
+        cardClam.add([bg3, txt3, cost3]);
+        bg3.on('pointerdown', () => selectCard('clam'));
+
+        function selectCard(type) {
+            currentSelection = type;
+            bg1.setStrokeStyle(type === 'seahorse' ? 2 : 1, type === 'seahorse' ? 0x00ffc8 : 0x113454);
+            bg2.setStrokeStyle(type === 'coral' ? 2 : 1, type === 'coral' ? 0x00ffc8 : 0x113454);
+            bg3.setStrokeStyle(type === 'clam' ? 2 : 1, type === 'clam' ? 0x00ffc8 : 0x113454);
+        }
+
+        // 5. Sky Drop Energy System
+        scene.time.addEvent({
+            delay: 5000,
+            callback: () => spawnOrb(scene, Phaser.Math.Between(40, 410), Phaser.Math.Between(130, 550)),
+            loop: true
+        });
+
+        // 6. Dynamic Scaling Enemy Wave Engine
         scene.time.addEvent({
             delay: 4000,
             callback: () => {
-                let rx = Phaser.Math.Between(40, 410);
-                let ry = Phaser.Math.Between(100, 600);
-                let orb = scene.add.circle(rx, ry, 15, 0xfffb00).setInteractive();
+                let lane = Phaser.Math.Between(0, 4);
+                let enemyX = startX + (lane * cellWidth);
                 
-                scene.tweens.add({
-                    targets: orb,
-                    alpha: 0.4,
-                    scale: 1.3,
-                    duration: 800,
-                    yoyo: true,
-                    repeat: -1
-                });
+                // 25% Chance to spawn a Heavy Armored Trash Hermit Crab
+                let isHard = Math.random() < 0.25;
+                let enemyEmoji = isHard ? '📦' : '🦀';
+                let enemyHp = isHard ? 120 : 40;
+                let speed = isHard ? 30 : 45;
 
-                orb.on('pointerdown', () => {
-                    lightOrbs += 25;
-                    lightText.setText('✨ Light: ' + lightOrbs);
-                    orb.destroy();
-                });
-            },
-            loop: true
-        });
-
-        // Optimized Enemy Spawning Engine
-        scene.time.addEvent({
-            delay: 3500,
-            callback: () => {
-                let randomLane = Phaser.Math.Between(0, 4);
-                let enemyX = startX + (randomLane * cellWidth);
-                
-                // Directly turning text entity into a physical object
-                let enemy = scene.add.text(enemyX, 50, '🦀', { fontSize: '28px' }).setOrigin(0.5);
+                let enemy = scene.add.text(enemyX, -20, enemyEmoji, { fontSize: '30px' }).setOrigin(0.5);
+                scene.physics.add.existing(enemy);
+                enemy.setData('hp', enemyHp);
                 scavengers.add(enemy);
-                enemy.body.setVelocityY(45); // Constant smooth descent speed
+                enemy.body.setVelocityY(speed);
             },
             loop: true
         });
 
-        // Combat Collision Physics
+        // Combat Collision Engine (Bullets vs Scavengers)
         scene.physics.add.overlap(bullets, scavengers, (bullet, enemy) => {
             bullet.destroy();
-            enemy.destroy();
+            let currentHp = enemy.getData('hp') - 20; // Each bullet deals 20 Damage
+            enemy.setData('hp', currentHp);
+
+            // Flash impact tint
+            enemy.setTint(0xff0055);
+            scene.time.delayedCall(100, () => { if(enemy.active) enemy.clearTint(); });
+
+            if (currentHp <= 0) {
+                enemy.destroy();
+                score += 10;
+                updateUI();
+            }
+        });
+
+        // Melee Eating Engine (Scavengers vs Your Defenders)
+        scene.physics.add.overlap(scavengers, defenders, (enemy, defender) => {
+            enemy.body.setVelocityY(0); // Stop moving while eating
+            
+            if (!enemy.getData('eating')) {
+                enemy.setData('eating', true);
+                
+                let biteTimer = scene.time.addEvent({
+                    delay: 750,
+                    callback: () => {
+                        if (!defender.active || !enemy.active) {
+                            biteTimer.destroy();
+                            if(enemy.active) {
+                                enemy.setData('eating', false);
+                                enemy.body.setVelocityY(enemy.text === '📦' ? 30 : 45);
+                            }
+                            return;
+                        }
+                        
+                        let defHp = defender.getData('hp') - 20;
+                        defender.setData('hp', defHp);
+                        
+                        // Bite tilt animation
+                        scene.tweens.add({ targets: enemy, angle: 15, duration: 100, yoyo: true });
+
+                        if (defHp <= 0) {
+                            defender.getData('gridZone').setData('occupied', false);
+                            defender.destroy();
+                            biteTimer.destroy();
+                            if (enemy.active) {
+                                enemy.setData('eating', false);
+                                enemy.body.setVelocityY(enemy.text === '📦' ? 30 : 45);
+                            }
+                        }
+                    },
+                    loop: true
+                });
+            }
         });
     }
 
-    function update() {
-        // Immediate Bullet Cleanup
-        bullets.getChildren().forEach(b => {
-            if (b && b.y < 0) b.destroy();
+    function spawnOrb(scene, x, y) {
+        let orb = scene.add.circle(x, y, 16, 0xfffb00).setInteractive();
+        scene.physics.add.existing(orb);
+        orb.body.setAllowGravity(false);
+        
+        scene.tweens.add({
+            targets: orb,
+            alpha: 0.3,
+            scale: 1.3,
+            duration: 900,
+            yoyo: true,
+            repeat: -1
         });
 
-        // Breach Defeat Verification
+        orb.on('pointerdown', () => {
+            lightOrbs += 25;
+            updateUI();
+            orb.destroy();
+        });
+    }
+
+    function updateUI() {
+        lightText.setText('✨ Light: ' + lightOrbs);
+        scoreText.setText('🏆 Score: ' + score);
+    }
+
+    function update() {
+        // Recycle Out of Bounds Bullets
+        bullets.getChildren().forEach(b => {
+            if (b && b.y < 100) b.destroy();
+        });
+
+        // Trigger Defeat Condition if Breached
         scavengers.getChildren().forEach(e => {
-            if (e && e.y > 670) {
+            if (e && e.y > 640) {
                 e.destroy();
-                alert('The Scavengers breached the Reef! Try again.');
+                alert('The Scavengers breached the Reef line! Your final Score: ' + score);
                 location.reload();
             }
         });

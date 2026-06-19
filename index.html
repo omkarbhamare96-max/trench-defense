@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trench Defense - Prototype</title>
-    <!-- Pulling Phaser 3 from an optimized CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.86.0/phaser.min.js"></script>
     <style>
         body {
@@ -29,13 +28,12 @@
 <div id="game-container"></div>
 
 <script>
-    // 1. Game Setup Configuration (Mobile/Desktop Friendly Vertical Layout)
     const config = {
         type: Phaser.AUTO,
         width: 450,
         height: 750,
         parent: 'game-container',
-        backgroundColor: '#0a1526', // Deep sea dark mode
+        backgroundColor: '#0a1526',
         physics: {
             default: 'arcade',
             arcade: { debug: false }
@@ -49,30 +47,27 @@
 
     const game = new Phaser.Game(config);
 
-    // Global Game State
     let lightOrbs = 100;
     let lightText;
-    let selectedCreature = 'seahorse'; // Default selection
-    let cells = [];
     let bullets;
     let scavengers;
+    let defenders;
 
-    function preload() {
-        // We will generate art procedurally using code to avoid asset loading issues on GitHub!
-    }
+    function preload() {}
 
     function create() {
         const scene = this;
         bullets = scene.physics.add.group();
         scavengers = scene.physics.add.group();
+        defenders = scene.physics.add.group();
 
-        // 2. Draw the Mother Reef Area (Bottom Protection Zone)
+        // Mother Reef Goal Zone
         let reefBg = scene.add.graphics();
         reefBg.fillStyle(0x00ffc8, 0.15);
         reefBg.fillRect(0, 680, 450, 70);
         scene.add.text(225, 715, '⚓ MOTHER REEF ⚓', { fontSize: '18px', fill: '#00ffc8', fontWeight: 'bold' }).setOrigin(0.5);
 
-        // 3. Draw the 5-Lane Grid System
+        // 5-Lane Grid Setup
         const startX = 45;
         const startY = 120;
         const cellWidth = 72;
@@ -83,12 +78,10 @@
                 let x = startX + (col * cellWidth);
                 let y = startY + (row * cellHeight);
 
-                // Grid square shape
                 let cellGraphic = scene.add.graphics();
                 cellGraphic.lineStyle(1, 0x1d3557, 0.5);
                 cellGraphic.strokeRect(x - cellWidth/2, y - cellHeight/2, cellWidth, cellHeight);
 
-                // Interactive zone for placing defenders
                 let hitZone = scene.add.zone(x, y, cellWidth, cellHeight).setInteractive();
                 hitZone.setData('occupied', false);
 
@@ -98,29 +91,30 @@
                         lightText.setText('✨ Light: ' + lightOrbs);
                         hitZone.setData('occupied', true);
                         
-                        // Spawn simple placeholder shape for Sniper Seahorse
-                        let defender = scene.add.circle(x, y, 20, 0x00b4d8);
-                        scene.add.text(x, y, '🐴', { fontSize: '20px' }).setOrigin(0.5);
+                        // Spawn defender directly as text object
+                        let defender = scene.add.text(x, y, '🐴', { fontSize: '32px' }).setOrigin(0.5);
+                        defenders.add(defender);
 
-                        // Give it an idle "breathing" stretch using Phaser Tweens
+                        // Idle squishy stretch animation
                         scene.tweens.add({
                             targets: defender,
-                            scaleY: 1.1,
-                            scaleX: 0.95,
-                            duration: 600 + Math.random() * 200,
+                            scaleY: 1.2,
+                            scaleX: 0.85,
+                            duration: 600,
                             yoyo: true,
                             repeat: -1,
                             ease: 'Sine.easeInOut'
                         });
 
-                        // Shoot loop
+                        // Projectile firing timer
                         scene.time.addEvent({
-                            delay: 2000,
+                            delay: 1800,
                             callback: () => {
-                                if (scavengers.getLength() > 0) { // Only shoot if enemies exist
-                                    let b = scene.physics.add.circle(x, y - 20, 6, 0x00f5ff);
+                                if (!defender.active) return;
+                                if (scavengers.getLength() > 0) {
+                                    let b = scene.add.circle(x, y - 20, 6, 0x00f5ff);
                                     bullets.add(b);
-                                    b.body.setVelocityY(-300); // Shoot upwards towards incoming enemies
+                                    b.body.setVelocityY(-350); // Fast projectiles
                                 }
                             },
                             loop: true
@@ -130,11 +124,11 @@
             }
         }
 
-        // 4. UI Resource Counter Dashboard
+        // Interface UI
         lightText = scene.add.text(20, 20, '✨ Light: ' + lightOrbs, { fontSize: '22px', fill: '#fffb00', fontWeight: 'bold' });
         scene.add.text(20, 50, 'Click grid to place Seahorse (Cost: 50)', { fontSize: '12px', fill: '#8fa0ba' });
 
-        // Natural Resource Generation (Dropping Light Orbs)
+        // Energy Spawning Engine
         scene.time.addEvent({
             delay: 4000,
             callback: () => {
@@ -144,8 +138,8 @@
                 
                 scene.tweens.add({
                     targets: orb,
-                    alpha: 0.5,
-                    scale: 1.2,
+                    alpha: 0.4,
+                    scale: 1.3,
                     duration: 800,
                     yoyo: true,
                     repeat: -1
@@ -160,39 +154,39 @@
             loop: true
         });
 
-        // 5. Enemy Spawning Loop (Sludge Crabs creeping down from top)
+        // Optimized Enemy Spawning Engine
         scene.time.addEvent({
-            delay: 5000,
+            delay: 3500,
             callback: () => {
                 let randomLane = Phaser.Math.Between(0, 4);
                 let enemyX = startX + (randomLane * cellWidth);
-                let enemy = scene.add.circle(enemyX, 50, 18, 0xe63946);
-                scene.add.text(enemyX, 50, '🦀', { fontSize: '18px' }).setOrigin(0.5);
                 
+                // Directly turning text entity into a physical object
+                let enemy = scene.add.text(enemyX, 50, '🦀', { fontSize: '28px' }).setOrigin(0.5);
                 scavengers.add(enemy);
-                enemy.body.setVelocityY(35); // Slow movement down toward Mother Reef
+                enemy.body.setVelocityY(45); // Constant smooth descent speed
             },
             loop: true
         });
 
-        // Collisions: Bullets hitting Scavengers
+        // Combat Collision Physics
         scene.physics.add.overlap(bullets, scavengers, (bullet, enemy) => {
             bullet.destroy();
-            enemy.destroy(); // Simple one-hit defeat for prototype
+            enemy.destroy();
         });
     }
 
     function update() {
-        // Recycle off-screen bullets
+        // Immediate Bullet Cleanup
         bullets.getChildren().forEach(b => {
-            if (b.y < 0) b.destroy();
+            if (b && b.y < 0) b.destroy();
         });
 
-        // Fail state condition check
+        // Breach Defeat Verification
         scavengers.getChildren().forEach(e => {
-            if (e.y > 680) {
-                alert('The Scavengers breached the Reef! Refresh to try again.');
+            if (e && e.y > 670) {
                 e.destroy();
+                alert('The Scavengers breached the Reef! Try again.');
                 location.reload();
             }
         });

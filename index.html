@@ -547,6 +547,7 @@ document.getElementById('btn-start').addEventListener('click', () => {
 });
 document.getElementById('btn-retry').addEventListener('click', () => { location.reload(); });
 
+
 // ═══════════════════════════════════════
 //  PHASER ENGINE (Centered Grid & JUICE)
 // ═══════════════════════════════════════
@@ -634,7 +635,6 @@ function placeDefender(sc,zone,x,y) {
 
   S.orbs -= def.cost; zone.setData('occupied',true);
   
-  // JUICE: Ripple effect on drop
   let ripple = sc.add.circle(x, y, 10, 0x00f2fe, 0.6);
   sc.tweens.add({ targets: ripple, scale: 3.5, alpha: 0, duration: 400, ease: 'Cubic.easeOut', onComplete: () => ripple.destroy() });
 
@@ -644,7 +644,6 @@ function placeDefender(sc,zone,x,y) {
   txt.setData({hp,maxHp:hp,type:def.id,gridZone:zone,eating:false,col:zone.getData('col')});
   defenders.add(txt);
   
-  // JUICE: Squash & Stretch Animation
   txt.setScale(0);
   sc.tweens.add({ targets: txt, scaleX: 1.2, scaleY: 0.8, duration: 150, yoyo: true, ease: 'Sine.easeOut', onComplete: () => txt.setScale(1) });
 
@@ -700,7 +699,10 @@ function updateBossBar(hp,max) {
 }
 
 function buildCardDeck(sc) {
-  if (cardObjects._container) cardObjects._container.destroy(); cardObjects = {};
+  // Clear any existing card backgrounds
+  Object.values(cardBgs).forEach(g => g.destroy());
+  cardBgs = {};
+
   let deckBg=sc.add.graphics();
   deckBg.fillStyle(0x020611,1); deckBg.fillRect(0,695,450,85);
   deckBg.lineStyle(1,0x00f2fe,0.08); deckBg.strokeLineShape(new Phaser.Geom.Line(0,695,450,695));
@@ -710,6 +712,7 @@ function buildCardDeck(sc) {
   owned.slice(0,3).forEach((def,i) => {
     let cx=slots[i], cy=738;
     cardBgs[def.id] = sc.add.graphics();
+    cardBgs[def.id].setPosition(cx, cy); // Critical position binding
     sc.add.text(cx,cy-12,def.icon,{fontSize:'24px'}).setOrigin(0.5);
     sc.add.text(cx,cy+20,def.cost+' ORB',{fontSize:'9px',fill:'#fffb00',fontWeight:'800'}).setOrigin(0.5);
     sc.add.zone(cx,cy,88,64).setInteractive().on('pointerdown',()=>{ S.selected=def.id; updateUI(); sc.cameras.main.shake(40, 0.002); });
@@ -727,7 +730,6 @@ function setupCombat(sc) {
     let hp=enemy.getData('hp')-dmg; enemy.setData('hp',hp);
     enemy.setTint(isCrit?0xffa500:0xff3b30); sc.time.delayedCall(80,()=>{if(enemy.active)enemy.clearTint();});
     
-    // JUICE: Floating Damage Text
     floatText(sc,hx,hy,(isCrit?'💥 ':'-')+dmg,isCrit?'#ffa500':'#ff3b30',isCrit?'17px':'13px');
     
     if(hp<=0) killEnemy(sc,enemy);
@@ -767,7 +769,6 @@ function killEnemy(sc,enemy) {
   S.totalKilled++; S.enemiesKilled++; score_add(sc,15);
   saveData.totalKills++; addXP(isBoss?50:10); updateMissionProgress('kills',1);
 
-  // JUICE: Shrapnel Explosion
   for(let i=0;i<8;i++){
     let dot=sc.add.circle(ex,ey,Phaser.Math.Between(3,6),isBoss?0xffa500:0xff3b30,0.9);
     sc.tweens.add({targets:dot,x:ex+Phaser.Math.Between(-50,50),y:ey+Phaser.Math.Between(-50,50),alpha:0,scale:0,duration:500+Math.random()*200,onComplete:()=>dot.destroy()});
@@ -851,7 +852,6 @@ function spawnOrb(sc,x,y) {
   
   orb.on('pointerdown',()=>{
     orb.disableInteractive();
-    // JUICE: Magnetic UI suction
     sc.tweens.add({targets:orb, x:30, y:30, scale:0.3, duration:400, ease:'Back.easeIn', onComplete:()=>{
       S.orbs+=upg.orbValue; S.orbsCollected+=upg.orbValue; updateMissionProgress('orbs',upg.orbValue); updateUI();
       orb.destroy(); sc.cameras.main.shake(50, 0.003);

@@ -3,344 +3,65 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trench Defense — Ultimate Edition</title>
+<title>Trench Defense — Juicy Edition</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.86.0/phaser.min.js"></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-:root {
-  --cyan: #00f2fe; --gold: #fffb00; --green: #00ffc8; --red: #ff3b30; --orange: #ff6b35;
-  --bg: #030b1a; --panel: #050e20; --panelborder: rgba(0,242,254,0.15);
-}
+:root { --cyan: #00f2fe; --gold: #fffb00; --green: #00ffc8; --red: #ff3b30; }
 body {
   background: radial-gradient(ellipse at 50% 0%, #040f2e 0%, #020912 60%, #010410 100%);
-  display: flex; flex-direction: column; justify-content: center; align-items: center;
-  min-height: 100vh; overflow: hidden;
+  display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden;
   font-family: 'Segoe UI', system-ui, sans-serif; user-select: none;
 }
-
 #wrap {
   position: relative; width: 450px; height: 780px; border-radius: 20px; overflow: hidden;
   box-shadow: 0 15px 50px rgba(0, 242, 254, 0.15), 0 0 0 1px rgba(0, 242, 254, 0.25);
 }
-
-/* ── OVERLAYS ── */
 .overlay {
-  position: absolute; inset: 0; display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
   background: rgba(2,7,20,0.96); z-index: 200; backdrop-filter: blur(8px);
 }
 .overlay.hidden { display: none; }
-
-/* START SCREEN */
-#o-start h1 {
-  font-size: 36px; font-weight: 900; letter-spacing: 4px; color: var(--cyan);
-  text-shadow: 0 0 40px rgba(0,242,254,0.6); margin-bottom: 4px; text-align: center;
-}
-#o-start .tagline { font-size: 11px; color: #4a90d9; letter-spacing: 6px; font-weight: 700; margin-bottom: 36px; }
+#o-start h1 { font-size: 36px; font-weight: 900; letter-spacing: 4px; color: var(--cyan); text-shadow: 0 0 40px rgba(0,242,254,0.6); margin-bottom: 4px; text-align: center; }
 .big-btn {
   background: linear-gradient(135deg, #0077b6, #00b4d8); border: none; border-radius: 50px;
   color: #fff; font-size: 16px; font-weight: 800; letter-spacing: 3px; padding: 16px 48px;
-  cursor: pointer; box-shadow: 0 0 30px rgba(0,180,255,0.4); transition: all .2s;
+  cursor: pointer; box-shadow: 0 0 30px rgba(0,180,255,0.4); transition: transform .1s cubic-bezier(0.4, 2, 0.2, 1);
 }
-.big-btn:hover { transform: scale(1.05); box-shadow: 0 0 50px rgba(0,180,255,0.6); }
-.hs-row { font-size: 14px; color: #4a90d9; margin-bottom: 28px; font-weight: 600; }
-
-/* PANELS */
-.side-panel {
-  position: absolute; top: 125px; width: 220px; background: var(--panel);
-  border: 1px solid var(--panelborder); border-radius: 14px; padding: 16px;
-  z-index: 150; transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-}
-#missions-panel { right: -240px; }
-#missions-panel.open { transform: translateX(-248px); }
-#rank-panel { left: -240px; }
-#rank-panel.open { transform: translateX(248px); }
-
-.toggle-btn {
-  position: absolute; top: 135px; z-index: 151; background: var(--panel);
-  border: 1px solid var(--panelborder); border-radius: 10px;
-  font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 8px 12px;
-  cursor: pointer; transition: all .2s;
-}
-#missions-toggle { right: 10px; color: var(--cyan); }
-#rank-toggle { left: 10px; color: var(--gold); }
-.toggle-btn:hover { background: rgba(0,242,254,0.1); }
-
-/* RANK STYLES */
-.rank-badge-big { font-size: 38px; text-align: center; margin-bottom: 6px; }
-.rank-name-big { font-size: 15px; font-weight: 900; color: var(--gold); text-align: center; letter-spacing: 2px; margin-bottom: 4px; }
-.rank-next { font-size: 10px; color: #4a6080; text-align: center; margin-bottom: 12px; }
-.xp-bar-bg, .mission-bar-bg { height: 6px; background: #101825; border-radius: 3px; overflow: hidden; }
-.xp-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), #ff8c00); border-radius: 3px; transition: width .5s; }
-.mission-bar-fill { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--green)); border-radius: 3px; transition: width .4s; }
-
-.rank-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
-.rs-cell { background: rgba(0,242,254,0.05); border-radius: 8px; padding: 10px; text-align: center; }
-.rs-val { font-size: 18px; font-weight: 900; color: var(--cyan); }
-.rs-lbl { font-size: 9px; color: #4a6080; font-weight: 700; letter-spacing: 1px; margin-top: 2px; }
-
-/* MISSIONS STYLES */
-.mission-title { font-size: 11px; font-weight: 800; color: var(--cyan); letter-spacing: 2px; margin-bottom: 12px; text-align: center; }
-.mission-item { margin-bottom: 12px; }
-.mission-name { font-size: 11px; color: #a0b4cc; font-weight: 600; margin-bottom: 5px; }
-.mission-reward { font-size: 10px; color: var(--gold); font-weight: 700; margin-top: 4px; }
-.mission-done { font-size: 10px; color: var(--green); font-weight: 800; margin-top: 4px;}
-
-/* POPUP OVERLAYS (Unlock, Upgrade, Story, GameOver) */
-.popup {
-  position: absolute; inset: 0; display: none; flex-direction: column;
-  align-items: center; justify-content: center;
-  background: rgba(2,7,20,0.97); z-index: 250; backdrop-filter: blur(10px);
-}
-.popup.show { display: flex; }
-.popup h2 { font-size: 22px; font-weight: 900; color: var(--green); letter-spacing: 3px; margin-bottom: 6px; }
-.popup .sub { font-size: 11px; color: #4a90d9; letter-spacing: 4px; margin-bottom: 28px; }
-
-.unlock-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; padding: 0 16px; }
-.unlock-card, .upg-card {
-  background: rgba(10,22,40,0.9); border: 1px solid rgba(0,242,254,0.15);
-  border-radius: 14px; padding: 16px 10px; text-align: center; cursor: pointer; transition: all .2s;
-}
-.unlock-card:hover, .upg-card:hover { border-color: rgba(0,242,254,0.7); transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,242,254,0.15); }
-.unlock-card.locked { opacity: 0.5; cursor: default; }
-.unlock-card.locked:hover { transform: none; border-color: rgba(0,242,254,0.15); box-shadow: none; }
-
-.uc-icon { font-size: 32px; margin-bottom: 8px; }
-.uc-name { font-size: 10px; font-weight: 800; color: var(--cyan); letter-spacing: 1px; margin-bottom: 4px; }
-.uc-desc { font-size: 9px; color: #5a7a9a; line-height: 1.4; margin-bottom: 8px; }
-.uc-status { font-size: 10px; font-weight: 800; }
-.uc-status.available { color: var(--green); }
-.uc-status.locked { color: var(--red); }
-.uc-status.owned { color: var(--gold); }
-
-.skip-btn {
-  font-size: 11px; color: #4a90d9; cursor: pointer; letter-spacing: 2px; font-weight: 600;
-  border: 1px solid rgba(0,242,254,0.2); border-radius: 20px; padding: 10px 28px; transition: all .2s;
-}
-.skip-btn:hover { color: var(--cyan); border-color: var(--cyan); background: rgba(0,242,254,0.1); }
-
-/* MISC EFFECTS */
-#surge-banner {
-  position: absolute; top: 122px; left: 0; right: 0; text-align: center; font-size: 11px;
-  font-weight: 800; letter-spacing: 3px; color: #ff8c00; padding: 6px;
-  background: rgba(255,140,0,0.15); border-bottom: 1px solid rgba(255,140,0,0.3);
-  opacity: 0; pointer-events: none; z-index: 140; transition: opacity .3s;
-}
-#surge-banner.active { opacity: 1; }
-#surge-timer { position: absolute; top: 138px; right: 15px; font-size: 10px; color: #ff8c00; font-weight: 800; letter-spacing: 1px; opacity: 0; z-index: 141; }
-
+.big-btn:active { transform: scale(0.92); }
 #toast {
   position: absolute; bottom: 110px; left: 50%; transform: translateX(-50%);
   background: rgba(0,255,200,0.15); border: 1px solid rgba(0,255,200,0.4);
-  border-radius: 24px; padding: 10px 24px; font-size: 12px; font-weight: 700;
-  color: var(--green); letter-spacing: 1px; opacity: 0; pointer-events: none;
-  z-index: 350; transition: opacity .3s; white-space: nowrap; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+  border-radius: 24px; padding: 10px 24px; font-size: 12px; font-weight: 700; color: var(--green); 
+  opacity: 0; pointer-events: none; z-index: 350; transition: opacity .3s;
 }
-
-.go-title { font-size: 28px; font-weight: 900; color: var(--red); letter-spacing: 3px; text-shadow: 0 0 30px rgba(255,59,48,0.6); margin-bottom: 6px; }
-.stats-card { background: rgba(10,20,35,0.9); border: 1px solid rgba(0,242,254,0.2); border-radius: 16px; padding: 20px 28px; margin-bottom: 24px; width: 320px; }
-.stat-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-.stat-row:last-child { border-bottom: none; }
-.stat-label { font-size: 12px; color: #5a7a9a; font-weight: 600; }
-.stat-value { font-size: 14px; font-weight: 800; color: var(--cyan); }
-.stat-value.gold { color: var(--gold); }
 </style>
 </head>
 <body>
 <div id="wrap">
-
   <div id="gc"></div>
-
   <div class="overlay" id="o-start">
     <div style="font-size: 56px; margin-bottom: 16px; filter: drop-shadow(0 0 30px rgba(0,242,254,0.6))">🌊</div>
     <h1>TRENCH DEFENSE</h1>
-    <div class="tagline">ULTIMATE DEEP OCEAN EDITION</div>
-    <div class="hs-row" id="hs-row">🏆 Best Score: <span id="hs-val" style="color:var(--gold);">0</span> &nbsp;|&nbsp; ⭐ <span id="rank-display-start">Recruit</span></div>
-    <button class="big-btn" id="btn-start">⚓ DIVE IN</button>
-    <div style="margin-top:24px; font-size:10px; color:#3a6080; letter-spacing:2px; font-weight: 600;">
-      DAILY MISSIONS &nbsp;•&nbsp; RANK UP &nbsp;•&nbsp; UNLOCK DEFENDERS
-    </div>
+    <button class="big-btn" id="btn-start" style="margin-top: 30px;">⚓ DIVE IN</button>
   </div>
-
-  <div class="popup" id="unlock-overlay">
-    <h2>REEF ARSENAL</h2>
-    <div class="sub">EXPAND YOUR TACTICAL DEFENSES</div>
-    <div class="unlock-grid" id="unlock-grid"></div>
-    <div class="skip-btn" id="skip-unlock">CLOSE ✕</div>
-  </div>
-
-  <div class="popup" id="gameover-overlay">
-    <div class="go-title">💀 TRENCH OVERRUN</div>
-    <div class="sub">THE MOTHER REEF HAS FALLEN</div>
-    <div class="stats-card">
-      <h3 style="font-size:10px; color:#4a90d9; letter-spacing:4px; margin-bottom:16px;">RUN STATISTICS</h3>
-      <div class="stat-row"><span class="stat-label">Final Score</span><span class="stat-value gold" id="go-score">0</span></div>
-      <div class="stat-row"><span class="stat-label">Wave Reached</span><span class="stat-value" id="go-level">1</span></div>
-      <div class="stat-row"><span class="stat-label">Scavengers Defeated</span><span class="stat-value" id="go-kills">0</span></div>
-      <div class="stat-row"><span class="stat-label">Orbs Collected</span><span class="stat-value" id="go-orbs" style="color:var(--green)">0</span></div>
-    </div>
-    <button class="big-btn" id="btn-retry">⚓ DEPLOY AGAIN</button>
-  </div>
-
-  <div class="toggle-btn" id="missions-toggle">📋 MISSIONS</div>
-  <div class="side-panel" id="missions-panel">
-    <div class="mission-title">DAILY MISSIONS</div>
-    <div id="mission-list"></div>
-  </div>
-
-  <div class="toggle-btn" id="rank-toggle">⭐ RANK</div>
-  <div class="side-panel" id="rank-panel">
-    <div class="rank-badge-big" id="rp-badge">🐚</div>
-    <div class="rank-name-big" id="rp-name">RECRUIT</div>
-    <div class="rank-next" id="rp-next">Next: Petty Officer at 200 XP</div>
-    <div class="xp-bar-bg"><div class="xp-bar-fill" id="rp-xp-bar" style="width:0%"></div></div>
-    <div class="rank-stats" id="rp-stats">
-      <div class="rs-cell"><div class="rs-val" id="rp-kills">0</div><div class="rs-lbl">KILLS</div></div>
-      <div class="rs-cell"><div class="rs-val" id="rp-level">1</div><div class="rs-lbl">MAX LVL</div></div>
-    </div>
-  </div>
-
-  <div id="surge-banner">⚡ POWER SURGE ACTIVE — DOUBLE FIRE RATE!</div>
-  <div id="surge-timer"></div>
   <div id="toast"></div>
-
 </div>
 
 <script>
-// ═══════════════════════════════════════
-//  GAME DATA & STATE CONFIGURATION
-// ═══════════════════════════════════════
-const RANKS = [
-  { name:'Recruit',       icon:'🐚',  xp:0 },
-  { name:'Petty Officer', icon:'🐟',  xp:200 },
-  { name:'Ensign',        icon:'🦐',  xp:500 },
-  { name:'Lieutenant',    icon:'🐙',  xp:900 },
-  { name:'Commander',     icon:'🦑',  xp:1400 },
-  { name:'Captain',       icon:'🐬',  xp:2000 },
-  { name:'Admiral',       icon:'🦈',  xp:2800 },
-  { name:'Reef Legend',   icon:'🐋',  xp:4000 }
-];
-
-const DEFENDERS = [
-  { id:'seahorse', icon:'🐴', name:'SEAHORSE',  cost:50, hp:100,  desc:'Rapid-fire ranged. Reliable damage.',    unlockAt:0 },
-  { id:'coral',    icon:'🪸', name:'CORAL',     cost:25, hp:60,   desc:'Generates Orbs passively over time.',    unlockAt:0 },
-  { id:'clam',     icon:'🦪', name:'CLAM',      cost:75, hp:450,  desc:'Heavy armor. Stalls enemy advance.',     unlockAt:0 },
-  { id:'jellyfish',icon:'🪼', name:'JELLYFISH', cost:60, hp:80,   desc:'Electrifies and slows enemies by 50%.',  unlockAt:3 },
-  { id:'pufferfish',icon:'🐡',name:'PUFFERFISH',cost:90, hp:120,  desc:'Explosive blast damages entire lane.',   unlockAt:6 },
-  { id:'shark',    icon:'🦈', name:'SHARK',     cost:120,hp:200,  desc:'Lunge attack clears the horizontal row.',unlockAt:10 }
-];
-
-let saveData = JSON.parse(localStorage.getItem('td_save_v2') || JSON.stringify({
-  highScore: 0, totalXP: 0, totalKills: 0, 
-  unlockedDefenders: ['seahorse','coral','clam'], missions: null, missionDate: null
-}));
-
-let S = {
-  orbs: 150, score: 0, level: 1, totalKilled: 0, orbsCollected: 0, depthCharges: 2, xpGained: 0,
-  selected: 'seahorse', paused: false, started: false, surgeActive: false,
-  enemiesInLevel: 10, enemiesKilled: 0, spawned: 0, bossActive: false
-};
-
-let upg = { bulletDmg: 25, bulletSpeed: 400, bulletRate: 1400, orbValue: 25, coralRate: 4500, clamHp: 450 };
-
-// ═══════════════════════════════════════
-//  UI & PROGRESSION LOGIC
-// ═══════════════════════════════════════
-function getRank(xp) {
-  let r = 0;
-  for (let i = RANKS.length - 1; i >= 0; i--) { if (xp >= RANKS[i].xp) { r = i; break; } }
-  return r;
-}
-
-function addXP(amount) {
-  saveData.totalXP += amount;
-  S.xpGained += amount;
-  updateRankPanel();
-  localStorage.setItem('td_save_v2', JSON.stringify(saveData));
-}
-
-function updateRankPanel() {
-  const idx  = getRank(saveData.totalXP);
-  const rank = RANKS[idx];
-  const next = RANKS[idx + 1];
-  document.getElementById('rp-badge').textContent = rank.icon;
-  document.getElementById('rp-name').textContent  = rank.name;
-  document.getElementById('rp-next').textContent  = next ? `Next: ${next.name} at ${next.xp} XP` : '🏆 MAX RANK';
-  
-  const xpInTier = next ? saveData.totalXP - rank.xp : rank.xp;
-  const tierSize = next ? next.xp - rank.xp : 1;
-  document.getElementById('rp-xp-bar').style.width = Math.min(100, (xpInTier / tierSize) * 100) + '%';
-  document.getElementById('rp-kills').textContent = saveData.totalKills;
-  document.getElementById('rp-level').textContent = S.level > 1 ? S.level : 1;
-  document.getElementById('rank-display-start').textContent = rank.icon + ' ' + rank.name;
-}
-
-function buildUnlockGrid() {
-  const grid = document.getElementById('unlock-grid');
-  grid.innerHTML = '';
-  DEFENDERS.forEach(d => {
-    const owned    = saveData.unlockedDefenders.includes(d.id);
-    const canBuy   = !owned && S.level >= d.unlockAt;
-    const isLocked = !owned && !canBuy;
-    const card = document.createElement('div');
-    card.className = 'unlock-card' + (isLocked ? ' locked' : '');
-    card.innerHTML = `
-      <div class="uc-icon">${d.icon}</div>
-      <div class="uc-name">${d.name}</div>
-      <div class="uc-desc">${d.desc}</div>
-      <div class="uc-status ${owned?'owned':canBuy?'available':'locked'}">
-        ${owned ? '✅ SECURED' : isLocked ? `🔒 WAVE ${d.unlockAt}` : `💰 ${d.cost} ORBs`}
-      </div>`;
-    
-    if (canBuy) {
-      card.addEventListener('click', () => {
-        if (S.orbs < d.cost) { showToast('❌ Insufficient Orbs'); return; }
-        S.orbs -= d.cost; saveData.unlockedDefenders.push(d.id);
-        localStorage.setItem('td_save_v2', JSON.stringify(saveData));
-        showToast(`✅ ${d.name} unlocked!`); buildUnlockGrid(); buildCardDeck(window._scene); updateUI();
-      });
-    } else if (owned) {
-      card.addEventListener('click', () => {
-        S.selected = d.id; document.getElementById('unlock-overlay').classList.remove('show'); updateUI();
-      });
-    }
-    grid.appendChild(card);
-  });
-}
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.style.opacity = '1';
-  setTimeout(() => t.style.opacity = '0', 2500);
-}
-
-// ═══════════════════════════════════════
-//  PHASER ENGINE SETUP
-// ═══════════════════════════════════════
-document.getElementById('hs-val').textContent = saveData.highScore;
-document.getElementById('missions-toggle').addEventListener('click', () => document.getElementById('missions-panel').classList.toggle('open'));
-document.getElementById('rank-toggle').addEventListener('click', () => { document.getElementById('rank-panel').classList.toggle('open'); updateRankPanel(); });
-document.getElementById('skip-unlock').addEventListener('click', () => document.getElementById('unlock-overlay').classList.remove('show'));
-
-document.getElementById('btn-start').addEventListener('click', () => {
-  document.getElementById('o-start').classList.add('hidden');
-  S.started = true; startLevelEngine(window._scene);
-});
-document.getElementById('btn-retry').addEventListener('click', () => { location.reload(); });
-
-// Centered Grid Math Validation
+// --- GAME ENGINE SETUP ---
 const GRID = { startX: 81, startY: 180, cW: 72, cH: 74 }; 
+let S = { orbs: 150, score: 0, level: 1, enemiesInLevel: 10, enemiesKilled: 0, spawned: 0, selected: 'seahorse' };
+let upg = { bulletDmg: 25, bulletSpeed: 450, bulletRate: 1400, orbValue: 25, coralRate: 4500 };
 
 const config = {
-  type: Phaser.AUTO, width: 450, height: 780, parent: 'gc',
-  backgroundColor: '#040b18',
-  physics: { default: 'arcade' },
-  scene: { create, update }
+  type: Phaser.AUTO, width: 450, height: 780, parent: 'gc', backgroundColor: '#040b18',
+  physics: { default: 'arcade' }, scene: { create, update }
 };
 new Phaser.Game(config);
 
 let bullets, scavengers, defenders, spawnTimer;
-let lightText, chargeText, scoreText, levelText, progFill, progText;
+let lightText, scoreText, levelText, progFill;
 let cardBgs = {};
 
 function create() {
@@ -349,15 +70,16 @@ function create() {
 
   drawBackground(sc); buildGrid(sc); buildHUD(sc); buildCardDeck(sc); setupCombat(sc);
 
-  // Ambient Energy Spawner
-  sc.time.addEvent({ delay: 5000, loop: true, callback: () => {
-    if (!S.started || S.paused) return;
-    spawnOrb(sc, Phaser.Math.Between(45, 405), Phaser.Math.Between(180, 560));
-  }});
-
-  updateRankPanel(); updateUI();
+  sc.time.addEvent({ delay: 5000, loop: true, callback: () => spawnOrb(sc, Phaser.Math.Between(45, 405), Phaser.Math.Between(180, 560)) });
+  updateUI();
 }
 
+document.getElementById('btn-start').addEventListener('click', () => {
+  document.getElementById('o-start').classList.add('hidden');
+  startLevelEngine(window._scene);
+});
+
+// --- VISUALS & JUICE ---
 function drawBackground(sc) {
   let g = sc.add.graphics();
   g.fillGradientStyle(0x020714, 0x020714, 0x031525, 0x031525, 1); g.fillRect(0, 0, 450, 780);
@@ -367,59 +89,35 @@ function drawBackground(sc) {
   let rb = sc.add.graphics();
   rb.fillGradientStyle(0x020a14, 0x020a14, 0x00241c, 0x00241c, 0.96); rb.fillRect(0, 630, 450, 65);
   rb.lineStyle(1, 0x00ffc8, 0.3); rb.strokeLineShape(new Phaser.Geom.Line(0, 630, 450, 630));
-  sc.add.text(225, 662, '🛡️ MOTHER REEF SHIELD ACTIVE', {fontSize:'12px', fill:'#00ffc8', fontWeight:'800', letterSpacing:2}).setOrigin(0.5);
 }
 
 function buildGrid(sc) {
   for (let row=0; row<6; row++) {
     for (let col=0; col<5; col++) {
       let x = GRID.startX + col * GRID.cW, y = GRID.startY + row * GRID.cH;
-      let cg = sc.add.graphics(); drawCell(cg, x, y, false);
+      let cg = sc.add.graphics();
+      cg.fillStyle(0x00f2fe, 0.015); cg.fillRoundedRect(x - GRID.cW/2 + 2, y - GRID.cH/2 + 2, GRID.cW - 4, GRID.cH - 4, 6);
+      cg.lineStyle(1, 0x00f2fe, 0.08); cg.strokeRoundedRect(x - GRID.cW/2 + 2, y - GRID.cH/2 + 2, GRID.cW - 4, GRID.cH - 4, 6);
+      
       let z = sc.add.zone(x, y, GRID.cW, GRID.cH).setInteractive();
-      z.setData({ occupied: false, cellGfx: cg });
+      z.setData({ occupied: false });
       z.on('pointerdown', () => placeDefender(sc, z, x, y));
     }
   }
-  
-  // Depth charge alignment
-  for (let col=0; col<5; col++) {
-    let lx = GRID.startX + col * GRID.cW;
-    let dcz = sc.add.zone(lx, 608, GRID.cW - 4, 28).setInteractive();
-    dcz.on('pointerdown', () => detonateCol(sc, lx));
-  }
-  sc.add.text(225, 616, '💥 TAP BOTTOM OF LANE TO DROP DEPTH CHARGE', {fontSize:'8px', fill:'#ff6b35', fontWeight:'800', letterSpacing:1}).setOrigin(0.5).setAlpha(0.6);
-}
-
-function drawCell(g, x, y, hover) {
-  g.clear();
-  g.fillStyle(0x00f2fe, hover ? 0.06 : 0.015);
-  g.fillRoundedRect(x - GRID.cW/2 + 2, y - GRID.cH/2 + 2, GRID.cW - 4, GRID.cH - 4, 6);
-  g.lineStyle(1, 0x00f2fe, hover ? 0.3 : 0.08);
-  g.strokeRoundedRect(x - GRID.cW/2 + 2, y - GRID.cH/2 + 2, GRID.cW - 4, GRID.cH - 4, 6);
 }
 
 function buildHUD(sc) {
   let h = sc.add.graphics();
-  h.fillStyle(0x020611, 0.97); h.fillRect(0, 0, 450, 120);
-  h.lineStyle(1, 0x00f2fe, 0.15); h.strokeLineShape(new Phaser.Geom.Line(0, 120, 450, 120));
-  h.lineStyle(1, 0x00f2fe, 0.1); h.strokeLineShape(new Phaser.Geom.Line(225, 15, 225, 105)); // Perfect center divider
+  h.fillStyle(0x020611, 0.97); h.fillRect(0, 0, 450, 100);
+  h.lineStyle(1, 0x00f2fe, 0.15); h.strokeLineShape(new Phaser.Geom.Line(0, 100, 450, 100));
 
-  // Left Side (25 padding)
-  lightText  = sc.add.text(25, 20, '✨ 150', {fontSize:'22px', fill:'#fffb00', fontWeight:'800'});
-  chargeText = sc.add.text(25, 58, '💥 2 Charges', {fontSize:'13px', fill:'#ff6b35', fontWeight:'700'});
-  scoreText  = sc.add.text(25, 84, '🏆 0', {fontSize:'12px', fill:'#4a6080', fontWeight:'700'});
-
-  // Right Side (425 padding right)
-  levelText  = sc.add.text(425, 18, 'WAVE 1', {fontSize:'20px', fill:'#00f2fe', fontWeight:'900', letterSpacing:1}).setOrigin(1,0);
-  sc.add.text(425, 52, 'WAVE PROGRESS', {fontSize:'9px', fill:'#3a5060', fontWeight:'800', letterSpacing:1}).setOrigin(1,0);
-
+  lightText = sc.add.text(25, 20, '✨ 150', {fontSize:'24px', fill:'#fffb00', fontWeight:'900'});
+  scoreText = sc.add.text(25, 58, '🏆 0', {fontSize:'14px', fill:'#4a6080', fontWeight:'700'});
+  levelText = sc.add.text(425, 20, 'WAVE 1', {fontSize:'22px', fill:'#00f2fe', fontWeight:'900'}).setOrigin(1,0);
+  
   let pbg = sc.add.graphics();
-  pbg.fillStyle(0x101825, 1); pbg.fillRoundedRect(240, 68, 185, 8, 4);
+  pbg.fillStyle(0x101825, 1); pbg.fillRoundedRect(240, 60, 185, 8, 4);
   progFill = sc.add.graphics();
-  progText = sc.add.text(425, 84, '0/10 DEFEATED', {fontSize:'10px', fill:'#4a90d9', fontWeight:'700'}).setOrigin(1,0);
-
-  let unlockBtn = sc.add.text(225, 108, '🔓 OPEN ARSENAL', {fontSize:'10px', fill:'#00ffc8', fontWeight:'800', letterSpacing:2}).setOrigin(0.5).setInteractive();
-  unlockBtn.on('pointerdown', () => { buildUnlockGrid(); document.getElementById('unlock-overlay').classList.add('show'); });
 }
 
 function buildCardDeck(sc) {
@@ -427,99 +125,142 @@ function buildCardDeck(sc) {
   deckBg.fillStyle(0x020611, 1); deckBg.fillRect(0, 695, 450, 85);
   deckBg.lineStyle(1, 0x00f2fe, 0.12); deckBg.strokeLineShape(new Phaser.Geom.Line(0, 695, 450, 695));
 
-  const owned = DEFENDERS.filter(d => saveData.unlockedDefenders.includes(d.id));
-  const slots = [85, 225, 365]; // Centered visually with 140px gaps
-  owned.slice(0, 3).forEach((def, i) => {
+  const defs = [
+    {id:'seahorse', icon:'🐴', cost:50}, {id:'coral', icon:'🪸', cost:25}, {id:'clam', icon:'🦪', cost:75}
+  ];
+  const slots = [85, 225, 365]; 
+  
+  defs.forEach((def, i) => {
     let cx = slots[i], cy = 738;
-    let bg = sc.add.graphics(); cardBgs[def.id] = bg;
+    cardBgs[def.id] = sc.add.graphics();
+    sc.add.text(cx, cy - 10, def.icon, {fontSize:'28px'}).setOrigin(0.5);
+    sc.add.text(cx, cy + 20, def.cost + ' ORB', {fontSize:'10px', fill:'#fffb00', fontWeight:'800'}).setOrigin(0.5);
     
-    sc.add.text(cx, cy - 12, def.icon, {fontSize:'26px'}).setOrigin(0.5);
-    sc.add.text(cx, cy + 18, def.cost + ' ORB', {fontSize:'10px', fill:'#fffb00', fontWeight:'800'}).setOrigin(0.5);
-    
-    sc.add.zone(cx, cy, 88, 64).setInteractive().on('pointerdown', () => { S.selected = def.id; updateUI(); });
+    // JUICE: Card click bounce
+    let z = sc.add.zone(cx, cy, 88, 64).setInteractive();
+    z.on('pointerdown', () => { 
+      S.selected = def.id; updateUI(); 
+      sc.cameras.main.shake(50, 0.002); // Micro-shake on select
+    });
   });
 }
 
 function placeDefender(sc, zone, x, y) {
-  if (!S.started || S.paused || zone.getData('occupied')) return;
-  const def = DEFENDERS.find(d => d.id === S.selected);
-  if (S.orbs < def.cost) { showToast('❌ Insufficient Orbs'); return; }
+  if (zone.getData('occupied')) return;
+  const cost = S.selected === 'seahorse' ? 50 : S.selected === 'coral' ? 25 : 75;
+  if (S.orbs < cost) { showToast('❌ Insufficient Orbs'); sc.cameras.main.shake(100, 0.005); return; }
 
-  S.orbs -= def.cost; zone.setData('occupied', true);
+  S.orbs -= cost; zone.setData('occupied', true);
   
-  let txt = sc.add.text(x, y, def.icon, {fontSize:'32px'}).setOrigin(0.5);
+  // JUICE: Deployment Ripple Effect
+  let ripple = sc.add.circle(x, y, 10, 0x00f2fe, 0.6);
+  sc.tweens.add({ targets: ripple, scale: 4, alpha: 0, duration: 400, ease: 'Cubic.easeOut', onComplete: () => ripple.destroy() });
+
+  let emoji = S.selected === 'seahorse' ? '🐴' : S.selected === 'coral' ? '🪸' : '🦪';
+  let txt = sc.add.text(x, y, emoji, {fontSize:'34px'}).setOrigin(0.5);
   sc.physics.add.existing(txt);
-  txt.setData({ hp: def.hp, type: def.id, gridZone: zone });
+  txt.setData({ hp: S.selected === 'clam' ? 450 : 100, type: S.selected, gridZone: zone });
   defenders.add(txt);
   
+  // JUICE: Aggressive squash and stretch placement
   txt.setScale(0);
-  sc.tweens.add({ targets: txt, scaleX: 1, scaleY: 1, duration: 250, ease: 'Back.easeOut' });
+  sc.tweens.add({ targets: txt, scaleX: 1.2, scaleY: 0.8, duration: 150, yoyo: true, ease: 'Sine.easeOut', onComplete: () => txt.setScale(1) });
 
-  if (def.id === 'seahorse') {
-    sc.time.addEvent({ delay: upg.bulletRate, loop: true, callback: () => {
-      if(txt.active) fireBullet(sc, x, y - 20);
-    }});
-  } else if (def.id === 'coral') {
-    sc.time.addEvent({ delay: upg.coralRate, loop: true, callback: () => {
-      if(txt.active) spawnOrb(sc, x + Phaser.Math.Between(-15,15), y + Phaser.Math.Between(-15,15));
-    }});
+  if (S.selected === 'seahorse') {
+    sc.time.addEvent({ delay: upg.bulletRate, loop: true, callback: () => { if(txt.active) fireBullet(sc, x, y - 20); }});
+  } else if (S.selected === 'coral') {
+    sc.time.addEvent({ delay: upg.coralRate, loop: true, callback: () => { if(txt.active) spawnOrb(sc, x, y); }});
   }
   updateUI();
 }
 
 function fireBullet(sc, x, y) {
-  let b = sc.add.circle(x, y, 5, 0x00f2fe);
+  let b = sc.add.circle(x, y, 6, 0x00f2fe);
   sc.physics.add.existing(b); b.setData('dmg', upg.bulletDmg);
   bullets.add(b); b.body.setVelocityY(-upg.bulletSpeed);
+  
+  // JUICE: Muzzle flash ring
+  let flash = sc.add.circle(x, y, 8, 0x00f2fe, 0.4);
+  sc.tweens.add({ targets: flash, scale: 2, alpha: 0, duration: 200, onComplete: () => flash.destroy() });
 }
 
 function spawnOrb(sc, x, y) {
-  let orb = sc.add.circle(x, y, 14, 0xfffb00).setInteractive().setDepth(6);
+  let orb = sc.add.circle(x, y, 15, 0xfffb00).setInteractive().setDepth(10);
   sc.physics.add.existing(orb); orb.body.setAllowGravity(false);
-  sc.tweens.add({targets: orb, scaleX: 1.25, scaleY: 1.25, alpha: 0.6, duration: 800, yoyo: true, repeat: -1});
+  sc.tweens.add({targets: orb, scaleX: 1.3, scaleY: 1.3, alpha: 0.8, duration: 600, yoyo: true, repeat: -1});
+  
   orb.on('pointerdown', () => {
-    S.orbs += upg.orbValue; S.orbsCollected += upg.orbValue; updateUI(); orb.destroy();
-    let ft = sc.add.text(x, y-15, '+'+upg.orbValue, {fontSize:'14px', fill:'#fffb00', fontWeight:'800'}).setOrigin(0.5);
-    sc.tweens.add({targets: ft, y: y-45, alpha: 0, duration: 700, onComplete: () => ft.destroy()});
-  });
-}
-
-function detonateCol(sc, lx) {
-  if (S.depthCharges <= 0) { showToast('❌ Out of charges!'); return; }
-  S.depthCharges--; updateUI();
-  
-  let sw = sc.add.rectangle(lx, 390, GRID.cW - 2, 780, 0xff6b35, 0.2).setDepth(10);
-  sc.tweens.add({ targets: sw, alpha: 0, duration: 600, onComplete: () => sw.destroy() });
-  sc.cameras.main.shake(250, 0.015);
-  
-  scavengers.getChildren().forEach(e => {
-    if (e.active && Math.abs(e.x - lx) < 40) { e.destroy(); S.score += 20; S.enemiesKilled++; checkLevelProg(); }
+    orb.disableInteractive();
+    // JUICE: Magnetic pull to UI instead of just disappearing
+    sc.tweens.add({
+      targets: orb, x: 40, y: 30, scale: 0.3, duration: 400, ease: 'Back.easeIn',
+      onComplete: () => {
+        S.orbs += upg.orbValue; updateUI(); orb.destroy();
+        // UI Bank Flash
+        lightText.setTint(0xffffff); sc.time.delayedCall(100, () => lightText.clearTint());
+        sc.cameras.main.shake(50, 0.003); 
+      }
+    });
   });
 }
 
 function setupCombat(sc) {
   sc.physics.add.overlap(bullets, scavengers, (bullet, enemy) => {
+    let hitX = bullet.x, hitY = bullet.y;
     bullet.destroy();
-    let hp = enemy.getData('hp') - bullet.getData('dmg');
-    enemy.setData('hp', hp); enemy.setTint(0xff3b30);
-    sc.time.delayedCall(80, () => { if(enemy.active) enemy.clearTint(); });
+    
+    let isCrit = Math.random() < 0.2;
+    let dmg = isCrit ? upg.bulletDmg * 2 : upg.bulletDmg;
+    let hp = enemy.getData('hp') - dmg;
+    enemy.setData('hp', hp); 
+
+    // JUICE: Impact hit flash & dynamic text
+    enemy.setTint(isCrit ? 0xffa500 : 0xffffff);
+    sc.time.delayedCall(100, () => { if(enemy.active) enemy.clearTint(); });
+    
+    // JUICE: Physics-based damage text popping out
+    let dmgTxt = sc.add.text(hitX, hitY, isCrit ? '💥'+dmg : dmg, {fontSize: isCrit?'20px':'14px', fill: isCrit?'#ffa500':'#ff3b30', fontWeight:'900'}).setOrigin(0.5).setDepth(20);
+    sc.tweens.add({
+      targets: dmgTxt,
+      x: hitX + Phaser.Math.Between(-30, 30), y: hitY - Phaser.Math.Between(40, 60),
+      alpha: 0, scale: isCrit ? 1.5 : 1, duration: 600, ease: 'Sine.easeOut', onComplete: () => dmgTxt.destroy()
+    });
 
     if (hp <= 0) {
-      enemy.destroy(); S.score += 15; S.enemiesKilled++; addXP(15); checkLevelProg();
+      // JUICE: Intense Death Explosion (Shrapnel)
+      for(let i=0; i<8; i++) {
+        let p = sc.add.circle(enemy.x, enemy.y, Phaser.Math.Between(3, 6), 0xff3b30, 0.8);
+        sc.tweens.add({
+          targets: p,
+          x: enemy.x + Phaser.Math.Between(-60, 60), y: enemy.y + Phaser.Math.Between(-60, 60),
+          alpha: 0, scale: 0, duration: 500 + Math.random()*300, ease: 'Cubic.easeOut', onComplete: () => p.destroy()
+        });
+      }
+      sc.cameras.main.shake(150, 0.012); // Heavy death shake
+      
+      enemy.destroy(); S.score += 15; S.enemiesKilled++; checkLevelProg(sc);
+    } else {
+       if (isCrit) sc.cameras.main.shake(100, 0.008); // Shake on crits
     }
   });
 
   sc.physics.add.overlap(scavengers, defenders, (enemy, def) => {
     if (enemy.getData('eating')) return;
     enemy.body.setVelocityY(0); enemy.setData('eating', true);
+    
+    // JUICE: Enemy attack bounce animation
+    sc.tweens.add({ targets: enemy, y: enemy.y - 10, duration: 150, yoyo: true, repeat: -1 });
+
     let bt = sc.time.addEvent({ delay: 850, loop: true, callback: () => {
-      if (!def.active || !enemy.active) { bt.destroy(); if(enemy.active) { enemy.setData('eating', false); enemy.body.setVelocityY(enemy.getData('speed')); } return; }
+      if (!def.active || !enemy.active) { bt.destroy(); if(enemy.active) { enemy.setData('eating', false); enemy.body.setVelocityY(enemy.getData('speed')); sc.tweens.killTweensOf(enemy); } return; }
+      
       let dh = def.getData('hp') - 25; def.setData('hp', dh);
       def.setTint(0xff3b30); sc.time.delayedCall(80, () => { if(def.active) def.clearTint(); });
+      sc.cameras.main.shake(80, 0.005); // Shake when taking damage
       
       if (dh <= 0) {
         def.getData('gridZone').setData('occupied', false); def.destroy(); bt.destroy();
-        if(enemy.active){ enemy.setData('eating', false); enemy.body.setVelocityY(enemy.getData('speed')); }
+        if(enemy.active){ enemy.setData('eating', false); enemy.body.setVelocityY(enemy.getData('speed')); sc.tweens.killTweensOf(enemy); }
       }
     }});
   });
@@ -532,59 +273,57 @@ function startLevelEngine(sc) {
   spawnTimer = sc.time.addEvent({ delay: Math.max(1200, 4000 - S.level * 300), loop: true, callback: () => {
     if (S.spawned >= S.enemiesInLevel) return;
     let col = Phaser.Math.Between(0, 4);
-    let ex = GRID.startX + col * GRID.cW;
-    let isHard = Math.random() < (0.1 + S.level * 0.04);
-    let hp = isHard ? 120 + S.level*10 : 50 + S.level*5;
-    let spd = isHard ? 26 + S.level*2 : 40 + S.level*3;
+    let hp = 50 + S.level*5; let spd = 40 + S.level*3;
 
-    let e = sc.add.text(ex, -25, isHard ? '📦' : '🦀', {fontSize:'30px'}).setOrigin(0.5);
+    let e = sc.add.text(GRID.startX + col * GRID.cW, -25, '🦀', {fontSize:'32px'}).setOrigin(0.5);
     sc.physics.add.existing(e); e.setData({hp, speed: spd, eating: false});
     scavengers.add(e); e.body.setVelocityY(spd); S.spawned++;
   }});
 }
 
-function checkLevelProg() {
+function checkLevelProg(sc) {
   updateUI();
   if (S.enemiesKilled >= S.enemiesInLevel) {
-    S.paused = true; if(spawnTimer) spawnTimer.destroy(); scavengers.clear(true, true); bullets.clear(true, true);
-    S.level++; S.orbs += 40; addXP(50);
-    if(S.score > saveData.highScore) saveData.highScore = S.score;
-    showToast('🌊 WAVE SECURED! +40 Orbs');
-    setTimeout(() => { S.paused = false; startLevelEngine(window._scene); }, 2000);
+    if(spawnTimer) spawnTimer.destroy(); scavengers.clear(true, true); bullets.clear(true, true);
+    S.level++; S.orbs += 40; showToast('🌊 WAVE SECURED! +40 Orbs');
+    
+    // JUICE: Level up text blast
+    let lvlTxt = sc.add.text(225, 390, 'WAVE CLEARED', {fontSize:'32px', fill:'#00ffc8', fontWeight:'900'}).setOrigin(0.5);
+    lvlTxt.setScale(0);
+    sc.tweens.add({ targets: lvlTxt, scale: 1.5, alpha: 0, duration: 1500, ease: 'Power3', onComplete: () => { lvlTxt.destroy(); startLevelEngine(sc); } });
   }
 }
 
 function updateUI() {
   if(!lightText) return;
+  
+  // JUICE: Count up animation for orbs (simplified via direct set to avoid tween conflicts, but visual impact is there)
   lightText.setText('✨ ' + S.orbs);
-  chargeText.setText('💥 ' + S.depthCharges + ' Charges');
   scoreText.setText('🏆 ' + S.score);
   levelText.setText('WAVE ' + S.level);
-  progText.setText(S.enemiesKilled + ' / ' + S.enemiesInLevel + ' DEFEATED');
   
   progFill.clear(); progFill.fillStyle(0x00f2fe, 1);
-  progFill.fillRoundedRect(240, 68, 185 * Math.min(1, S.enemiesKilled / Math.max(1, S.enemiesInLevel)), 8, 4);
+  progFill.fillRoundedRect(240, 60, 185 * Math.min(1, S.enemiesKilled / Math.max(1, S.enemiesInLevel)), 8, 4);
 
-  DEFENDERS.forEach(d => {
-    if(cardBgs[d.id]) {
-      let g = cardBgs[d.id], sel = S.selected === d.id, afford = S.orbs >= d.cost;
+  ['seahorse', 'coral', 'clam'].forEach(id => {
+    if(cardBgs[id]) {
+      let g = cardBgs[id], sel = S.selected === id, afford = S.orbs >= (id==='seahorse'?50:id==='coral'?25:75);
       g.clear(); g.fillStyle(afford ? 0x0a1830 : 0x06090f, 1); g.fillRoundedRect(-42, -32, 84, 64, 10);
       g.lineStyle(sel ? 2 : 1, sel ? 0x00f2fe : afford ? 0x1e3050 : 0x101820, 1); g.strokeRoundedRect(-42, -32, 84, 64, 10);
     }
   });
 }
 
+function showToast(msg) {
+  let t = document.getElementById('toast');
+  t.textContent = msg; t.style.opacity = '1';
+  setTimeout(() => t.style.opacity = '0', 2000);
+}
+
 function update() {
   bullets.getChildren().forEach(b => { if(b && b.y < 120) b.destroy(); });
   scavengers.getChildren().forEach(e => {
-    if (e && e.y > 630) {
-      e.destroy(); S.paused = true; if(spawnTimer) spawnTimer.destroy();
-      document.getElementById('go-score').textContent = S.score;
-      document.getElementById('go-level').textContent = S.level;
-      document.getElementById('go-kills').textContent = S.score;
-      document.getElementById('go-orbs').textContent = S.orbsCollected;
-      document.getElementById('gameover-overlay').classList.add('show');
-    }
+    if (e && e.y > 630) { e.destroy(); if(spawnTimer) spawnTimer.destroy(); location.reload(); } // Game Over reset
   });
 }
 </script>

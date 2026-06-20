@@ -1,430 +1,1359 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trench Defense - Premium Edition</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.86.0/phaser.min.js"></script>
-    <style>
-        body {
-            margin: 0;
-            background-color: #03060f;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            user-select: none;
-        }
-        #game-container {
-            box-shadow: 0 15px 50px rgba(0, 242, 254, 0.2);
-            border: 1px solid rgba(0, 242, 254, 0.3);
-            border-radius: 20px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trench Defense — Ultimate Edition</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.86.0/phaser.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --cyan:#00f2fe;--gold:#fffb00;--green:#00ffc8;--red:#ff3b30;--orange:#ff6b35;
+  --bg:#030b1a;--panel:#050e20;--panelborder:rgba(0,242,254,0.13);
+}
+body{background:radial-gradient(ellipse at 50% 0%,#040f2e 0%,#020912 60%,#010410 100%);
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  min-height:100vh;overflow:hidden;
+  font-family:'Segoe UI',system-ui,sans-serif;user-select:none;}
+
+#wrap{position:relative;width:450px;height:780px;border-radius:18px;overflow:hidden;
+  box-shadow:0 0 80px rgba(0,180,255,0.18),0 0 0 1px rgba(0,242,254,0.18);}
+
+/* ── OVERLAYS ── */
+.overlay{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  background:rgba(2,7,20,0.96);z-index:200;backdrop-filter:blur(6px);}
+.overlay.hidden{display:none;}
+
+/* START SCREEN */
+#o-start h1{font-size:34px;font-weight:900;letter-spacing:4px;color:var(--cyan);
+  text-shadow:0 0 40px rgba(0,242,254,0.5);margin-bottom:4px;}
+#o-start .tagline{font-size:10px;color:#3a6080;letter-spacing:6px;font-weight:700;margin-bottom:36px;}
+.big-btn{background:linear-gradient(135deg,#0077b6,#00b4d8);border:none;border-radius:50px;
+  color:#fff;font-size:15px;font-weight:800;letter-spacing:3px;padding:15px 44px;
+  cursor:pointer;box-shadow:0 0 30px rgba(0,180,255,0.35);transition:all .2s;}
+.big-btn:hover{transform:scale(1.05);box-shadow:0 0 50px rgba(0,180,255,0.55);}
+.hs-row{font-size:13px;color:#4a90d9;margin-bottom:28px;font-weight:600;}
+
+/* MISSIONS */
+#missions-panel{position:absolute;top:120px;right:-230px;width:215px;
+  background:var(--panel);border:1px solid var(--panelborder);
+  border-radius:14px;padding:14px;z-index:150;transition:right .35s cubic-bezier(.4,0,.2,1);}
+#missions-panel.open{right:8px;}
+#missions-toggle{position:absolute;top:130px;right:8px;z-index:151;
+  background:var(--panel);border:1px solid var(--panelborder);border-radius:10px;
+  color:var(--cyan);font-size:11px;font-weight:700;letter-spacing:1px;
+  padding:8px 10px;cursor:pointer;transition:all .2s;}
+#missions-toggle:hover{background:rgba(0,242,254,0.08);}
+.mission-title{font-size:10px;font-weight:800;color:var(--cyan);letter-spacing:2px;margin-bottom:10px;}
+.mission-item{margin-bottom:10px;}
+.mission-name{font-size:10px;color:#a0b4cc;font-weight:600;margin-bottom:4px;}
+.mission-bar-bg{height:5px;background:#101825;border-radius:3px;overflow:hidden;}
+.mission-bar-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--green));
+  border-radius:3px;transition:width .4s;}
+.mission-reward{font-size:9px;color:var(--gold);font-weight:700;margin-top:2px;}
+.mission-done{font-size:9px;color:var(--green);font-weight:800;}
+
+/* RANK PANEL */
+#rank-panel{position:absolute;top:120px;left:-220px;width:210px;
+  background:var(--panel);border:1px solid var(--panelborder);
+  border-radius:14px;padding:14px;z-index:150;transition:left .35s cubic-bezier(.4,0,.2,1);}
+#rank-panel.open{left:8px;}
+#rank-toggle{position:absolute;top:130px;left:8px;z-index:151;
+  background:var(--panel);border:1px solid var(--panelborder);border-radius:10px;
+  color:var(--gold);font-size:11px;font-weight:700;letter-spacing:1px;
+  padding:8px 10px;cursor:pointer;transition:all .2s;}
+#rank-toggle:hover{background:rgba(255,251,0,0.06);}
+.rank-badge-big{font-size:36px;text-align:center;margin-bottom:6px;}
+.rank-name-big{font-size:14px;font-weight:900;color:var(--gold);text-align:center;
+  letter-spacing:2px;margin-bottom:4px;}
+.rank-next{font-size:9px;color:#4a6080;text-align:center;margin-bottom:10px;}
+.xp-bar-bg{height:6px;background:#101825;border-radius:3px;overflow:hidden;}
+.xp-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold),#ff8c00);
+  border-radius:3px;transition:width .5s;}
+.rank-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
+.rs-cell{background:rgba(0,242,254,0.04);border-radius:8px;padding:8px;text-align:center;}
+.rs-val{font-size:16px;font-weight:900;color:var(--cyan);}
+.rs-lbl{font-size:8px;color:#4a6080;font-weight:700;letter-spacing:1px;}
+
+/* UNLOCK TREE */
+#unlock-overlay{position:absolute;inset:0;display:none;flex-direction:column;
+  align-items:center;justify-content:center;
+  background:rgba(2,7,20,0.97);z-index:250;backdrop-filter:blur(8px);}
+#unlock-overlay.show{display:flex;}
+#unlock-overlay h2{font-size:20px;font-weight:900;color:var(--green);letter-spacing:3px;margin-bottom:4px;}
+#unlock-overlay .sub{font-size:10px;color:#3a6080;letter-spacing:4px;margin-bottom:28px;}
+.unlock-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
+.unlock-card{background:rgba(10,22,40,0.9);border:1px solid rgba(0,242,254,0.15);
+  border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;transition:all .2s;}
+.unlock-card:hover{border-color:rgba(0,242,254,0.6);transform:translateY(-3px);}
+.unlock-card.locked{opacity:.45;cursor:default;}
+.unlock-card.locked:hover{transform:none;border-color:rgba(0,242,254,0.15);}
+.uc-icon{font-size:30px;margin-bottom:8px;}
+.uc-name{font-size:9px;font-weight:800;color:var(--cyan);letter-spacing:1px;margin-bottom:4px;}
+.uc-desc{font-size:8px;color:#4a6080;line-height:1.5;margin-bottom:6px;}
+.uc-status{font-size:9px;font-weight:800;}
+.uc-status.available{color:var(--green);}
+.uc-status.locked{color:#ff3b30;}
+.uc-status.owned{color:var(--gold);}
+.skip-link{font-size:10px;color:#2a4060;cursor:pointer;letter-spacing:2px;
+  border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:8px 24px;}
+.skip-link:hover{color:#6a8aaa;}
+
+/* UPGRADE OVERLAY */
+#upgrade-overlay{position:absolute;inset:0;display:none;flex-direction:column;
+  align-items:center;justify-content:center;
+  background:rgba(2,7,20,0.96);z-index:260;backdrop-filter:blur(8px);}
+#upgrade-overlay.show{display:flex;}
+#upgrade-overlay h2{font-size:20px;font-weight:900;color:var(--green);letter-spacing:3px;margin-bottom:3px;}
+.upg-level-tag{font-size:10px;color:#3a6080;letter-spacing:4px;margin-bottom:6px;}
+.upg-orbs{font-size:13px;color:var(--gold);font-weight:700;margin-bottom:22px;}
+.upgrade-row{display:flex;gap:12px;margin-bottom:22px;}
+.upg-card{background:rgba(10,22,40,0.9);border:1px solid rgba(0,242,254,0.15);
+  border-radius:14px;padding:16px 12px;width:116px;text-align:center;
+  cursor:pointer;transition:all .22s;}
+.upg-card:hover{border-color:rgba(0,242,254,0.7);box-shadow:0 0 20px rgba(0,242,254,0.15);
+  transform:translateY(-4px);}
+.upg-card .ui{font-size:28px;margin-bottom:8px;}
+.upg-card .un{font-size:9px;font-weight:800;color:var(--cyan);letter-spacing:1px;margin-bottom:4px;}
+.upg-card .ud{font-size:8px;color:#4a6080;line-height:1.5;margin-bottom:8px;}
+.upg-card .uc{font-size:11px;font-weight:800;color:var(--gold);}
+.upg-card.free .uc{color:var(--green);}
+.skip-upg{font-size:10px;color:#2a4060;cursor:pointer;letter-spacing:2px;
+  border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:8px 24px;}
+.skip-upg:hover{color:#6a8aaa;}
+
+/* STORY OVERLAY */
+#story-overlay{position:absolute;inset:0;display:none;flex-direction:column;
+  align-items:center;justify-content:center;
+  background:rgba(2,4,12,0.98);z-index:270;backdrop-filter:blur(10px);}
+#story-overlay.show{display:flex;}
+.story-chapter{font-size:9px;color:#2a4060;letter-spacing:5px;font-weight:700;margin-bottom:16px;}
+.story-icon{font-size:56px;margin-bottom:20px;filter:drop-shadow(0 0 20px rgba(0,242,254,0.4));}
+.story-title{font-size:20px;font-weight:900;color:var(--cyan);letter-spacing:2px;margin-bottom:12px;text-align:center;}
+.story-text{font-size:12px;color:#5a7a9a;line-height:1.9;max-width:340px;text-align:center;margin-bottom:32px;}
+.story-continue{background:linear-gradient(135deg,#003850,#005070);border:1px solid var(--cyan);
+  border-radius:30px;color:var(--cyan);font-size:11px;font-weight:800;letter-spacing:3px;
+  padding:12px 36px;cursor:pointer;transition:all .2s;}
+.story-continue:hover{box-shadow:0 0 25px rgba(0,242,254,0.3);}
+
+/* RANKUP OVERLAY */
+#rankup-overlay{position:absolute;inset:0;display:none;flex-direction:column;
+  align-items:center;justify-content:center;
+  background:rgba(2,7,20,0.95);z-index:280;backdrop-filter:blur(10px);}
+#rankup-overlay.show{display:flex;}
+.ru-label{font-size:9px;color:#4a6080;letter-spacing:6px;font-weight:700;margin-bottom:16px;}
+.ru-icon{font-size:80px;animation:pulse-rank 1.2s ease-in-out infinite;}
+@keyframes pulse-rank{0%,100%{filter:drop-shadow(0 0 10px rgba(255,251,0,0.3));}
+  50%{filter:drop-shadow(0 0 40px rgba(255,251,0,0.9));}}
+.ru-name{font-size:28px;font-weight:900;color:var(--gold);letter-spacing:3px;
+  text-shadow:0 0 30px rgba(255,251,0,0.5);margin-bottom:6px;}
+.ru-desc{font-size:11px;color:#4a90d9;margin-bottom:30px;}
+
+/* GAME OVER STATS */
+#gameover-overlay{position:absolute;inset:0;display:none;flex-direction:column;
+  align-items:center;justify-content:center;
+  background:rgba(2,4,12,0.97);z-index:290;backdrop-filter:blur(10px);}
+#gameover-overlay.show{display:flex;}
+.go-title{font-size:24px;font-weight:900;color:var(--red);letter-spacing:3px;
+  text-shadow:0 0 30px rgba(255,59,48,0.5);margin-bottom:4px;}
+.go-sub{font-size:10px;color:#3a5060;letter-spacing:4px;margin-bottom:28px;}
+.stats-card{background:rgba(10,20,35,0.9);border:1px solid rgba(0,242,254,0.12);
+  border-radius:16px;padding:20px 28px;margin-bottom:22px;min-width:290px;}
+.stats-card h3{font-size:9px;color:#2a4060;letter-spacing:4px;font-weight:800;margin-bottom:14px;}
+.stat-row{display:flex;justify-content:space-between;align-items:center;
+  padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.stat-row:last-child{border-bottom:none;}
+.stat-label{font-size:11px;color:#4a6080;font-weight:600;}
+.stat-value{font-size:13px;font-weight:800;color:var(--cyan);}
+.stat-value.gold{color:var(--gold);}
+.stat-value.green{color:var(--green);}
+.go-rank-row{display:flex;align-items:center;gap:12px;margin-bottom:22px;}
+.go-rank-icon{font-size:36px;}
+.go-rank-info .rn{font-size:16px;font-weight:900;color:var(--gold);letter-spacing:1px;}
+.go-rank-info .rs{font-size:10px;color:#4a6080;}
+
+/* POWER SURGE BANNER */
+#surge-banner{position:absolute;top:122px;left:0;right:0;
+  text-align:center;font-size:11px;font-weight:800;letter-spacing:3px;
+  color:#ff8c00;padding:5px;background:rgba(255,140,0,0.12);
+  border-bottom:1px solid rgba(255,140,0,0.2);
+  opacity:0;pointer-events:none;z-index:140;transition:opacity .3s;}
+#surge-banner.active{opacity:1;}
+
+/* THREAT INDICATOR */
+.threat-dot{position:absolute;width:6px;height:6px;border-radius:50%;
+  background:var(--red);box-shadow:0 0 8px var(--red);animation:threat-pulse .6s ease-in-out infinite;}
+@keyframes threat-pulse{0%,100%{opacity:1;}50%{opacity:0.2;}}
+
+/* COMBO DISPLAY */
+#combo-display{position:absolute;top:300px;left:50%;transform:translateX(-50%);
+  font-size:26px;font-weight:900;letter-spacing:2px;
+  pointer-events:none;z-index:300;opacity:0;white-space:nowrap;
+  text-shadow:0 0 20px rgba(255,107,53,0.8);}
+
+/* POWER SURGE TIMER */
+#surge-timer{position:absolute;top:134px;right:12px;font-size:9px;
+  color:#ff8c00;font-weight:800;letter-spacing:1px;opacity:0;z-index:141;}
+
+/* NOTIFICATION TOAST */
+#toast{position:absolute;bottom:100px;left:50%;transform:translateX(-50%);
+  background:rgba(0,255,200,0.12);border:1px solid rgba(0,255,200,0.3);
+  border-radius:24px;padding:8px 22px;font-size:11px;font-weight:700;
+  color:var(--green);letter-spacing:1px;opacity:0;pointer-events:none;
+  z-index:350;transition:opacity .3s;white-space:nowrap;}
+</style>
 </head>
 <body>
+<div id="wrap">
 
-<div id="game-container"></div>
+  <!-- PHASER CANVAS TARGET -->
+  <div id="gc"></div>
+
+  <!-- START SCREEN -->
+  <div class="overlay" id="o-start">
+    <div style="font-size:48px;margin-bottom:16px;filter:drop-shadow(0 0 30px rgba(0,242,254,0.6))">🌊</div>
+    <h1>TRENCH DEFENSE</h1>
+    <div class="tagline">ULTIMATE DEEP OCEAN EDITION</div>
+    <div class="hs-row" id="hs-row">🏆 Best: <span id="hs-val">0</span> &nbsp;|&nbsp; ⭐ <span id="rank-display-start">Recruit</span></div>
+    <button class="big-btn" id="btn-start">⚓ DIVE IN</button>
+    <div style="margin-top:20px;font-size:9px;color:#1a3050;letter-spacing:2px;">
+      DAILY MISSIONS &nbsp;•&nbsp; RANK SYSTEM &nbsp;•&nbsp; UNLOCKABLE DEFENDERS
+    </div>
+  </div>
+
+  <!-- STORY OVERLAY -->
+  <div id="story-overlay">
+    <div class="story-chapter" id="story-chapter">CHAPTER 1</div>
+    <div class="story-icon" id="story-icon">🌊</div>
+    <div class="story-title" id="story-title">THE DEEP AWAKENS</div>
+    <div class="story-text" id="story-text">The Mother Reef has stood for ten thousand years. Now the Scavenger Tide rises from the abyss. You are the last Reef Guardian. Protect the light.</div>
+    <button class="story-continue" id="story-continue">DIVE IN →</button>
+  </div>
+
+  <!-- RANK UP OVERLAY -->
+  <div id="rankup-overlay">
+    <div class="ru-label">RANK UP!</div>
+    <div class="ru-icon" id="ru-icon">🐚</div>
+    <div class="ru-name" id="ru-name">PETTY OFFICER</div>
+    <div class="ru-desc" id="ru-desc">You've proven yourself in the deep.</div>
+  </div>
+
+  <!-- UNLOCK OVERLAY -->
+  <div id="unlock-overlay">
+    <h2>REEF ARSENAL</h2>
+    <div class="sub">SELECT A DEFENDER TO DEPLOY</div>
+    <div class="unlock-grid" id="unlock-grid"></div>
+    <div class="skip-link" id="skip-unlock">CLOSE ✕</div>
+  </div>
+
+  <!-- UPGRADE OVERLAY -->
+  <div id="upgrade-overlay">
+    <h2>WAVE SECURED</h2>
+    <div class="upg-level-tag" id="upg-level-tag">LEVEL 1 COMPLETE</div>
+    <div class="upg-orbs" id="upg-orbs">✨ 150 Orbs</div>
+    <div class="upgrade-row" id="upgrade-row"></div>
+    <div class="skip-upg" id="skip-upg">SKIP → DIVE DEEPER</div>
+  </div>
+
+  <!-- GAME OVER -->
+  <div id="gameover-overlay">
+    <div class="go-title">💀 TRENCH OVERRUN</div>
+    <div class="go-sub">THE REEF HAS FALLEN</div>
+    <div class="go-rank-row">
+      <div class="go-rank-icon" id="go-rank-icon">🐚</div>
+      <div class="go-rank-info">
+        <div class="rn" id="go-rank-name">Recruit</div>
+        <div class="rs" id="go-rank-sub">Final Rank Achieved</div>
+      </div>
+    </div>
+    <div class="stats-card">
+      <h3>RUN STATISTICS</h3>
+      <div class="stat-row"><span class="stat-label">Score</span><span class="stat-value gold" id="go-score">0</span></div>
+      <div class="stat-row"><span class="stat-label">Level Reached</span><span class="stat-value" id="go-level">1</span></div>
+      <div class="stat-row"><span class="stat-label">Enemies Killed</span><span class="stat-value" id="go-kills">0</span></div>
+      <div class="stat-row"><span class="stat-label">Critical Hits</span><span class="stat-value" id="go-crits">0</span></div>
+      <div class="stat-row"><span class="stat-label">Best Combo</span><span class="stat-value" id="go-combo">0x</span></div>
+      <div class="stat-row"><span class="stat-label">Orbs Collected</span><span class="stat-value green" id="go-orbs">0</span></div>
+      <div class="stat-row"><span class="stat-label">Personal Best</span><span class="stat-value gold" id="go-pb">0</span></div>
+    </div>
+    <button class="big-btn" id="btn-retry">⚓ RISE AGAIN</button>
+  </div>
+
+  <!-- FLOATING UI -->
+  <div id="missions-toggle">📋 MISSIONS</div>
+  <div id="missions-panel">
+    <div class="mission-title">📋 DAILY MISSIONS</div>
+    <div id="mission-list"></div>
+  </div>
+
+  <div id="rank-toggle">⭐ RANK</div>
+  <div id="rank-panel">
+    <div class="rank-badge-big" id="rp-badge">🐚</div>
+    <div class="rank-name-big" id="rp-name">RECRUIT</div>
+    <div class="rank-next" id="rp-next">Next: Petty Officer at 200 XP</div>
+    <div class="xp-bar-bg"><div class="xp-bar-fill" id="rp-xp-bar" style="width:0%"></div></div>
+    <div class="rank-stats" id="rp-stats">
+      <div class="rs-cell"><div class="rs-val" id="rp-kills">0</div><div class="rs-lbl">KILLS</div></div>
+      <div class="rs-cell"><div class="rs-val" id="rp-level">1</div><div class="rs-lbl">LEVEL</div></div>
+      <div class="rs-cell"><div class="rs-val" id="rp-crits">0</div><div class="rs-lbl">CRITS</div></div>
+      <div class="rs-cell"><div class="rs-val" id="rp-combo">0</div><div class="rs-lbl">BEST COMBO</div></div>
+    </div>
+  </div>
+
+  <!-- POWER SURGE BANNER -->
+  <div id="surge-banner">⚡ POWER SURGE ACTIVE — DOUBLE FIRE RATE!</div>
+  <div id="surge-timer"></div>
+
+  <!-- COMBO -->
+  <div id="combo-display"></div>
+
+  <!-- TOAST -->
+  <div id="toast"></div>
+</div>
 
 <script>
-    const config = {
-        type: Phaser.AUTO,
-        width: 450,
-        height: 780,
-        parent: 'game-container',
-        backgroundColor: '#040b18',
-        physics: {
-            default: 'arcade',
-            arcade: { debug: false }
-        },
-        scene: {
-            preload: preload,
-            create: create,
-            update: update
+// ═══════════════════════════════════════
+//  DATA & STATE
+// ═══════════════════════════════════════
+const RANKS = [
+  { name:'Recruit',       icon:'🐚',  xp:0,    desc:'Just starting out.' },
+  { name:'Petty Officer', icon:'🐟',  xp:200,  desc:'First blood in the deep.' },
+  { name:'Ensign',        icon:'🦐',  xp:500,  desc:'Holding the line.' },
+  { name:'Lieutenant',    icon:'🐙',  xp:900,  desc:'The reef trusts you.' },
+  { name:'Commander',     icon:'🦑',  xp:1400, desc:'Masters of the current.' },
+  { name:'Captain',       icon:'🐬',  xp:2000, desc:'Feared in every trench.' },
+  { name:'Admiral',       icon:'🦈',  xp:2800, desc:'Guardian of the deep.' },
+  { name:'Reef Legend',   icon:'🐋',  xp:4000, desc:'The ocean sings your name.' },
+];
+
+const DEFENDERS = [
+  { id:'seahorse', icon:'🐴', name:'SEAHORSE',  cost:50, hp:100,  desc:'Rapid-fire ranged. Best all-rounder.',    unlockAt:0 },
+  { id:'coral',    icon:'🪸', name:'CORAL',     cost:25, hp:60,   desc:'Passive orb generator. Place early.',     unlockAt:0 },
+  { id:'clam',     icon:'🦪', name:'CLAM',      cost:75, hp:450,  desc:'Armored wall. Absorbs huge damage.',      unlockAt:0 },
+  { id:'jellyfish',icon:'🪼', name:'JELLYFISH', cost:60, hp:80,   desc:'Slows enemies in its lane by 50%.',       unlockAt:3 },
+  { id:'pufferfish',icon:'🐡',name:'PUFFERFISH',cost:90, hp:120,  desc:'Area blast. Hits ALL enemies in lane.',   unlockAt:6 },
+  { id:'shark',    icon:'🦈', name:'SHARK',     cost:120,hp:200,  desc:'Charges forward, kills all in row.',      unlockAt:10 },
+];
+
+const STORY_BEATS = [
+  { chapter:'PROLOGUE',   icon:'🌊', title:'THE DEEP AWAKENS',      text:'The Mother Reef has stood for ten thousand years. Now the Scavenger Tide rises from the abyss. You are the last Reef Guardian. Protect the light.' },
+  { chapter:'CHAPTER 1',  icon:'🦀', title:'THE CRAB ARMY MARCHES', text:'Hundreds of crab-scavengers swarm the upper trenches. Their claws glow with stolen reef-light. Every shell they crack weakens the Mother.' },
+  { chapter:'CHAPTER 2',  icon:'📦', title:'THE ARMORED TIDE',      text:'Bigger threats emerge from the pressure zones below. These cargo-crabs carry stolen ore on their backs, shrugging off weaker fire.' },
+  { chapter:'CHAPTER 3',  icon:'🪖', title:'THE IRON SHELLS',       text:'Ancient, battle-hardened creatures in iron carapaces. They have survived a thousand reef wars. They do not stop. They do not feel pain.' },
+  { chapter:'CHAPTER 4',  icon:'👾', title:'BOSS: THE ABYSS TITAN', text:'A leviathan rises from the hadal zone. Its shadow blocks the reef-light. Destroy it — or the Mother Reef is lost forever.' },
+  { chapter:'EPILOGUE',   icon:'🌟', title:'THE REEF ENDURES',      text:'The last scavenger retreats into the dark. The bioluminescent reef blooms in grateful light. But the abyss never truly sleeps...' },
+];
+
+// Persistent data
+let saveData = JSON.parse(localStorage.getItem('td_save') || JSON.stringify({
+  highScore: 0, totalXP: 0, rankIndex: 0,
+  totalKills: 0, totalCrits: 0, unlockedDefenders: ['seahorse','coral','clam'],
+  missions: null, missionDate: null,
+}));
+
+// Session state
+let S = {
+  orbs: 150, score: 0, level: 1,
+  killed: 0, totalKilled: 0, crits: 0,
+  orbsCollected: 0,
+  streak: 0, bestStreak: 0,
+  streakTimer: null,
+  depthCharges: 2,
+  xpGained: 0,
+  selected: 'seahorse',
+  paused: false, started: false,
+  surgeActive: false, surgeTimer: null,
+  enemiesInLevel: 10, enemiesKilled: 0, spawned: 0,
+  bossActive: false,
+  storyShown: {},
+};
+
+let upg = {
+  bulletDmg: 25, bulletSpeed: 380, bulletRate: 1400,
+  orbValue: 25, coralRate: 4500, clamHp: 450,
+  jellySlowPower: 0.5, puffDmg: 35, sharkHp: 200,
+};
+
+// ═══════════════════════════════════════
+//  MISSIONS
+// ═══════════════════════════════════════
+const MISSION_DEFS = [
+  { id:'m_kills',  label:'Kill 20 enemies',    type:'kills',  target:20,  reward:40  },
+  { id:'m_kills2', label:'Kill 40 enemies',    type:'kills',  target:40,  reward:80  },
+  { id:'m_crits',  label:'Land 10 crits',      type:'crits',  target:10,  reward:35  },
+  { id:'m_level',  label:'Reach Level 5',      type:'level',  target:5,   reward:60  },
+  { id:'m_level2', label:'Reach Level 8',      type:'level',  target:8,   reward:100 },
+  { id:'m_combo',  label:'Get a 4x combo',     type:'combo',  target:4,   reward:50  },
+  { id:'m_orbs',   label:'Collect 100 orbs',   type:'orbs',   target:100, reward:45  },
+  { id:'m_score',  label:'Score 500 points',   type:'score',  target:500, reward:55  },
+];
+
+function initMissions() {
+  const today = new Date().toDateString();
+  if (saveData.missionDate !== today || !saveData.missions) {
+    // Pick 3 random missions
+    const shuffled = [...MISSION_DEFS].sort(() => Math.random() - 0.5);
+    saveData.missions = shuffled.slice(0,3).map(m => ({ ...m, progress:0, done:false }));
+    saveData.missionDate = today;
+    persist();
+  }
+  renderMissions();
+}
+
+function renderMissions() {
+  const list = document.getElementById('mission-list');
+  list.innerHTML = '';
+  saveData.missions.forEach(m => {
+    const pct = Math.min(100, (m.progress / m.target) * 100);
+    list.innerHTML += `
+      <div class="mission-item">
+        <div class="mission-name">${m.label}</div>
+        <div class="mission-bar-bg"><div class="mission-bar-fill" style="width:${pct}%"></div></div>
+        ${m.done
+          ? `<div class="mission-done">✅ COMPLETE (+${m.reward} ORBs)</div>`
+          : `<div class="mission-reward">${m.progress}/${m.target} — Reward: ${m.reward} ORBs</div>`
         }
-    };
+      </div>`;
+  });
+}
 
-    const game = new Phaser.Game(config);
-
-    // Core States
-    let lightOrbs = 150;
-    let score = 0;
-    let currentLevel = 1;
-    let enemiesDefeatedInLevel = 0;
-    let totalEnemiesInLevel = 10;
-    let currentSelection = 'seahorse';
-
-    // UI Objects
-    let lightText, scoreText, levelText, waveProgressText;
-    let progressBarFill;
-    let bg1, bg2, bg3; 
-
-    // Logic Groups
-    let bullets, scavengers, defenders;
-    let spawnTimer;
-
-    function preload() {}
-
-    function create() {
-        const scene = this;
-
-        bullets = scene.physics.add.group();
-        scavengers = scene.physics.add.group();
-        defenders = scene.physics.add.group();
-
-        // 1. ATMOSPHERIC GRAPHICS DEEP OCEAN
-        let deepBg = scene.add.graphics();
-        deepBg.fillGradientStyle(0x020714, 0x020714, 0x041324, 0x041324, 1);
-        deepBg.fillRect(0, 0, 450, 780);
-
-        // Grid scan lines for premium look
-        deepBg.lineStyle(1, 0x00f2fe, 0.03);
-        for(let i = 0; i <= 450; i += 45) {
-            deepBg.strokeLineShape(new Phaser.Geom.Line(i, 0, i, 780));
-        }
-
-        // 2. REEF GUARD INTERFACE LINE
-        let reefBg = scene.add.graphics();
-        reefBg.fillGradientStyle(0x020714, 0x020714, 0x001f1b, 0x001f1b, 0.9);
-        reefBg.fillRect(0, 630, 450, 65);
-        reefBg.lineStyle(1, 0x00ffc8, 0.25);
-        reefBg.strokeLineShape(new Phaser.Geom.Line(0, 630, 450, 630));
-        scene.add.text(225, 662, '🛡️ MOTHER REEF SHIELD ACTIVE', { fontSize: '12px', fill: '#00ffc8', fontWeight: '700', letterSpacing: 2 }).setOrigin(0.5);
-
-        // 3. MATHEMATICALLY BALANCED TACTICAL GRID
-        const startX = 45;
-        const startY = 175;
-        const cellWidth = 72;
-        const cellHeight = 74;
-
-        for (let row = 0; row < 6; row++) {
-            for (let col = 0; col < 5; col++) {
-                let x = startX + (col * cellWidth);
-                let y = startY + (row * cellHeight);
-
-                let cellGraphic = scene.add.graphics();
-                cellGraphic.fillStyle(0x00f2fe, 0.012);
-                cellGraphic.fillRoundedRect(x - cellWidth/2 + 3, y - cellHeight/2 + 3, cellWidth - 6, cellHeight - 6, 6);
-                cellGraphic.lineStyle(1, 0x00f2fe, 0.07);
-                cellGraphic.strokeRoundedRect(x - cellWidth/2 + 3, y - cellHeight/2 + 3, cellWidth - 6, cellHeight - 6, 6);
-
-                let hitZone = scene.add.zone(x, y, cellWidth, cellHeight).setInteractive();
-                hitZone.setData('occupied', false);
-
-                hitZone.on('pointerdown', () => {
-                    if (hitZone.getData('occupied')) return;
-
-                    let cost = currentSelection === 'seahorse' ? 50 : currentSelection === 'coral' ? 25 : 75;
-                    
-                    if (lightOrbs >= cost) {
-                        lightOrbs -= cost;
-                        hitZone.setData('occupied', true);
-                        
-                        let emoji = '🐴';
-                        let hp = 100;
-                        if (currentSelection === 'coral') { emoji = '🪸'; hp = 60; }
-                        if (currentSelection === 'clam') { emoji = '🦪'; hp = 450; }
-
-                        let defText = scene.add.text(x, y, emoji, { fontSize: '32px' }).setOrigin(0.5);
-                        scene.physics.add.existing(defText);
-                        defText.setData('hp', hp);
-                        defText.setData('type', currentSelection);
-                        defText.setData('gridZone', hitZone);
-                        defenders.add(defText);
-
-                        defText.setScale(0);
-                        scene.tweens.add({
-                            targets: defText,
-                            scaleX: 1, scaleY: 1,
-                            duration: 200,
-                            ease: 'Back.easeOut'
-                        });
-
-                        if (currentSelection === 'seahorse') {
-                            scene.time.addEvent({
-                                delay: 1400,
-                                callback: () => {
-                                    if (!defText.active) return;
-                                    let b = scene.add.circle(x, y - 20, 5, 0x00f2fe);
-                                    bullets.add(b);
-                                    b.body.setVelocityY(-380);
-                                },
-                                loop: true
-                            });
-                        } else if (currentSelection === 'coral') {
-                            scene.time.addEvent({
-                                delay: 4500,
-                                callback: () => {
-                                    if (!defText.active) return;
-                                    spawnOrb(scene, x + Phaser.Math.Between(-12, 12), y + Phaser.Math.Between(-12, 12));
-                                },
-                                loop: true
-                            });
-                        }
-                        updateUISlice();
-                    }
-                });
-            }
-        }
-
-        // 4. BALANCED PREMIUM HEAD HUD PANEL
-        let hudBg = scene.add.graphics();
-        hudBg.fillStyle(0x020611, 0.95);
-        hudBg.fillRect(0, 0, 450, 115);
-        hudBg.lineStyle(1, 0x00f2fe, 0.15);
-        hudBg.strokeLineShape(new Phaser.Geom.Line(0, 115, 450, 115));
-
-        // Subtly enclosed dashboard capsules
-        lightText = scene.add.text(25, 24, '✨ ' + lightOrbs, { fontSize: '20px', fill: '#fffb00', fontWeight: '700' });
-        scoreText = scene.add.text(25, 58, '🏆 ' + score, { fontSize: '14px', fill: '#a0aec0', fontWeight: '500' });
-        levelText = scene.add.text(425, 22, 'LEVEL ' + currentLevel, { fontSize: '18px', fill: '#00f2fe', fontWeight: '800', letterSpacing: 1 }).setOrigin(1, 0);
-
-        waveProgressText = scene.add.text(425, 58, 'WAVE PROGRESS', { fontSize: '10px', fill: '#4a5568', fontWeight: '700', letterSpacing: 1 }).setOrigin(1, 0);
-        let progressBarBg = scene.add.graphics();
-        progressBarBg.fillStyle(0x131924, 1);
-        progressBarBg.fillRoundedRect(25, 88, 400, 6, 3);
-        progressBarFill = scene.add.graphics();
-
-        // 5. FLOATING TACTICAL COMMAND DECKS
-        let deckBg = scene.add.graphics();
-        deckBg.fillStyle(0x020611, 1);
-        deckBg.fillRect(0, 695, 450, 85);
-        deckBg.lineStyle(1, 0x00f2fe, 0.12);
-        deckBg.strokeLineShape(new Phaser.Geom.Line(0, 695, 450, 695));
-
-        // Card 1: Seahorse
-        cardSeahorse = scene.add.container(85, 738);
-        bg1 = scene.add.graphics();
-        cardSeahorse.add(bg1);
-        cardSeahorse.add([scene.add.text(0, -10, '🐴', { fontSize: '24px' }).setOrigin(0.5), scene.add.text(0, 16, '50 LGT', { fontSize: '10px', fill: '#fffb00', fontWeight: '700' }).setOrigin(0.5)]);
-        let zone1 = scene.add.zone(85, 738, 82, 60).setInteractive();
-        zone1.on('pointerdown', () => selectCard('seahorse'));
-
-        // Card 2: Coral
-        cardCoral = scene.add.container(225, 738);
-        bg2 = scene.add.graphics();
-        cardCoral.add(bg2);
-        cardCoral.add([scene.add.text(0, -10, '🪸', { fontSize: '24px' }).setOrigin(0.5), scene.add.text(0, 16, '25 LGT', { fontSize: '10px', fill: '#fffb00', fontWeight: '700' }).setOrigin(0.5)]);
-        let zone2 = scene.add.zone(225, 738, 82, 60).setInteractive();
-        zone2.on('pointerdown', () => selectCard('coral'));
-
-        // Card 3: Clam
-        cardClam = scene.add.container(365, 738);
-        bg3 = scene.add.graphics();
-        cardClam.add(bg3);
-        cardClam.add([scene.add.text(0, -10, '🦪', { fontSize: '24px' }).setOrigin(0.5), scene.add.text(0, 16, '75 LGT', { fontSize: '10px', fill: '#fffb00', fontWeight: '700' }).setOrigin(0.5)]);
-        let zone3 = scene.add.zone(365, 738, 82, 60).setInteractive();
-        zone3.on('pointerdown', () => selectCard('clam'));
-
-        function selectCard(type) {
-            currentSelection = type;
-            updateUISlice();
-        }
-
-        // Ambient Resource loop
-        scene.time.addEvent({
-            delay: 4500,
-            callback: () => spawnOrb(scene, Phaser.Math.Between(40, 410), Phaser.Math.Between(160, 540)),
-            loop: true
-        });
-
-        startLevelEngine(scene);
-
-        // Bullets Impact & Combat
-        scene.physics.add.overlap(bullets, scavengers, (bullet, enemy) => {
-            let hitX = bullet.x;
-            let hitY = bullet.y;
-            bullet.destroy();
-
-            let currentHp = enemy.getData('hp') - 25;
-            enemy.setData('hp', currentHp);
-
-            // Red flashing visual feedback
-            enemy.setTint(0xff3b30);
-            scene.time.delayedCall(80, () => { if(enemy.active) enemy.clearTint(); });
-
-            // Animated Damage Numbers Popup
-            let dmgPopup = scene.add.text(hitX, hitY - 15, '-25', { fontSize: '14px', fill: '#ff3b30', fontWeight: '700' }).setOrigin(0.5);
-            scene.tweens.add({
-                targets: dmgPopup,
-                y: hitY - 40,
-                alpha: 0,
-                duration: 600,
-                onComplete: () => dmgPopup.destroy()
-            });
-
-            if (currentHp <= 0) {
-                enemy.destroy();
-                score += 15;
-                enemiesDefeatedInLevel++;
-                updateUISlice();
-
-                if (enemiesDefeatedInLevel >= totalEnemiesInLevel) {
-                    advanceNextLevel(scene);
-                }
-            }
-        });
-
-        // Eating Combat Logic
-        scene.physics.add.overlap(scavengers, defenders, (enemy, defender) => {
-            enemy.body.setVelocityY(0);
-            if (!enemy.getData('eating')) {
-                enemy.setData('eating', true);
-                let biteTimer = scene.time.addEvent({
-                    delay: 800,
-                    callback: () => {
-                        if (!defender.active || !enemy.active) {
-                            biteTimer.destroy();
-                            if(enemy.active) {
-                                enemy.setData('eating', false);
-                                enemy.body.setVelocityY(enemy.getData('speed'));
-                            }
-                            return;
-                        }
-                        let defHp = defender.getData('hp') - 20;
-                        defender.setData('hp', defHp);
-                        if (defHp <= 0) {
-                            defender.getData('gridZone').setData('occupied', false);
-                            defender.destroy();
-                            biteTimer.destroy();
-                            if (enemy.active) {
-                                enemy.setData('eating', false);
-                                enemy.body.setVelocityY(enemy.getData('speed'));
-                            }
-                        }
-                    },
-                    loop: true
-                });
-            }
-        });
-
-        // Force initialize card UI layouts
-        updateUISlice();
+function updateMissionProgress(type, amount) {
+  if (!saveData.missions) return;
+  saveData.missions.forEach(m => {
+    if (m.done) return;
+    let track = false;
+    if (m.type === type) track = true;
+    if (m.type === 'level' && type === 'level' && S.level >= m.target) { m.progress = m.target; track = false; }
+    if (m.type === 'combo' && type === 'combo' && amount >= m.target) { m.progress = m.target; track = false; }
+    if (track) m.progress = Math.min(m.target, m.progress + (amount || 1));
+    if (!m.done && m.progress >= m.target) {
+      m.done = true;
+      S.orbs += m.reward;
+      showToast(`✅ Mission complete! +${m.reward} Orbs`);
+      updateUI();
     }
+  });
+  renderMissions();
+  persist();
+}
 
-    function startLevelEngine(scene) {
-        totalEnemiesInLevel = 8 + (currentLevel * 4);
-        enemiesDefeatedInLevel = 0;
-        updateUISlice();
+// ═══════════════════════════════════════
+//  RANK
+// ═══════════════════════════════════════
+function getRank(xp) {
+  let r = 0;
+  for (let i = RANKS.length - 1; i >= 0; i--) {
+    if (xp >= RANKS[i].xp) { r = i; break; }
+  }
+  return r;
+}
 
-        let spawnDelay = Math.max(1400, 4200 - (currentLevel * 400));
-        if (spawnTimer) spawnTimer.destroy();
+function addXP(amount) {
+  const oldRank = getRank(saveData.totalXP);
+  saveData.totalXP += amount;
+  S.xpGained += amount;
+  const newRank = getRank(saveData.totalXP);
+  if (newRank > oldRank) {
+    saveData.rankIndex = newRank;
+    persist();
+    showRankUp(newRank);
+  }
+  updateRankPanel();
+  persist();
+}
 
-        let spawnedCount = 0;
-        spawnTimer = scene.time.addEvent({
-            delay: spawnDelay,
-            callback: () => {
-                if (spawnedCount >= totalEnemiesInLevel) return;
+function showRankUp(idx) {
+  const r = RANKS[idx];
+  document.getElementById('ru-icon').textContent = r.icon;
+  document.getElementById('ru-name').textContent = r.name;
+  document.getElementById('ru-desc').textContent = r.desc;
+  const el = document.getElementById('rankup-overlay');
+  el.classList.add('show');
+  setTimeout(() => { el.classList.remove('show'); }, 2800);
+}
 
-                let lane = Phaser.Math.Between(0, 4);
-                let enemyX = 45 + (lane * 72);
-                
-                let isHard = Math.random() < (0.15 + (currentLevel * 0.05));
-                let enemyEmoji = isHard ? '📦' : '🦀';
-                let enemyHp = isHard ? 125 : 50;
-                let speed = (isHard ? 28 : 42) + (currentLevel * 3);
+function updateRankPanel() {
+  const idx  = getRank(saveData.totalXP);
+  const rank = RANKS[idx];
+  const next = RANKS[idx + 1];
+  document.getElementById('rp-badge').textContent = rank.icon;
+  document.getElementById('rp-name').textContent  = rank.name;
+  document.getElementById('rp-next').textContent  = next ? `Next: ${next.name} at ${next.xp} XP` : '🏆 MAX RANK';
+  const xpInTier = next ? saveData.totalXP - rank.xp : rank.xp;
+  const tierSize = next ? next.xp - rank.xp : 1;
+  document.getElementById('rp-xp-bar').style.width = Math.min(100, (xpInTier / tierSize) * 100) + '%';
+  document.getElementById('rp-kills').textContent = saveData.totalKills;
+  document.getElementById('rp-level').textContent = S.level;
+  document.getElementById('rp-crits').textContent = saveData.totalCrits;
+  document.getElementById('rp-combo').textContent = S.bestStreak + 'x';
+  // Start screen rank
+  const ri = getRank(saveData.totalXP);
+  document.getElementById('rank-display-start').textContent = RANKS[ri].icon + ' ' + RANKS[ri].name;
+}
 
-                let enemy = scene.add.text(enemyX, -20, enemyEmoji, { fontSize: '28px' }).setOrigin(0.5);
-                scene.physics.add.existing(enemy);
-                enemy.setData('hp', enemyHp);
-                enemy.setData('speed', speed);
-                scavengers.add(enemy);
-                enemy.body.setVelocityY(speed);
-
-                spawnedCount++;
-            },
-            loop: true
-        });
+// ═══════════════════════════════════════
+//  UNLOCK TREE
+// ═══════════════════════════════════════
+function buildUnlockGrid() {
+  const grid = document.getElementById('unlock-grid');
+  grid.innerHTML = '';
+  DEFENDERS.forEach(d => {
+    const owned    = saveData.unlockedDefenders.includes(d.id);
+    const canBuy   = !owned && S.level >= d.unlockAt;
+    const isLocked = !owned && !canBuy;
+    const card = document.createElement('div');
+    card.className = 'unlock-card' + (isLocked ? ' locked' : '');
+    card.innerHTML = `
+      <div class="uc-icon">${d.icon}</div>
+      <div class="uc-name">${d.name}</div>
+      <div class="uc-desc">${d.desc}</div>
+      <div class="uc-status ${owned?'owned':canBuy?'available':'locked'}">
+        ${owned ? '✅ OWNED' : isLocked ? `🔒 LVL ${d.unlockAt}` : `💰 ${d.cost} ORBs`}
+      </div>`;
+    if (canBuy) {
+      card.addEventListener('click', () => {
+        if (S.orbs < d.cost) { showToast('❌ Not enough orbs!'); return; }
+        S.orbs -= d.cost;
+        saveData.unlockedDefenders.push(d.id);
+        persist();
+        showToast(`✅ ${d.name} unlocked!`);
+        buildUnlockGrid();
+        buildCardDeck(window._scene);
+        updateUI();
+      });
+    } else if (owned) {
+      card.addEventListener('click', () => {
+        S.selected = d.id;
+        document.getElementById('unlock-overlay').classList.remove('show');
+        updateUI();
+      });
     }
+    grid.appendChild(card);
+  });
+}
 
-    function advanceNextLevel(scene) {
-        spawnTimer.destroy();
-        scavengers.clear(true, true);
-        bullets.clear(true, true);
+// ═══════════════════════════════════════
+//  STORY
+// ═══════════════════════════════════════
+function showStory(idx, cb) {
+  if (S.storyShown[idx]) { cb(); return; }
+  S.storyShown[idx] = true;
+  const beat = STORY_BEATS[idx];
+  if (!beat) { cb(); return; }
+  document.getElementById('story-chapter').textContent = beat.chapter;
+  document.getElementById('story-icon').textContent    = beat.icon;
+  document.getElementById('story-title').textContent   = beat.title;
+  document.getElementById('story-text').textContent    = beat.text;
+  document.getElementById('story-overlay').classList.add('show');
+  document.getElementById('story-continue').onclick = () => {
+    document.getElementById('story-overlay').classList.remove('show');
+    cb();
+  };
+}
 
-        currentLevel++;
-        
-        let winText = scene.add.text(225, 380, 'TRENCH SECURED\nLEVEL ' + (currentLevel - 1) + ' COMPLETE', { 
-            fontSize: '24px', fill: '#00ffc8', align: 'center', fontWeight: '800', letterSpacing: 2 
-        }).setOrigin(0.5);
-        
-        winText.setScale(0);
-        scene.tweens.add({
-            targets: winText,
-            scaleX: 1, scaleY: 1,
-            duration: 300,
-            ease: 'Back.easeOut'
-        });
+// ═══════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════
+let toastTimeout;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => t.style.opacity = '0', 2200);
+}
 
-        scene.time.delayedCall(2600, () => {
-            winText.destroy();
-            startLevelEngine(scene);
-        });
+// ═══════════════════════════════════════
+//  COMBO DISPLAY
+// ═══════════════════════════════════════
+const COMBO_MSGS = {2:'DOUBLE!',3:'TRIPLE!',4:'QUAD!!',5:'PENTA!!!',6:'UNSTOPPABLE!!!',7:'GODLIKE!!!!!'};
+let comboHideTimer;
+function showComboDisplay(n) {
+  const el = document.getElementById('combo-display');
+  const msg = COMBO_MSGS[Math.min(n,7)] || n + 'x COMBO!!!!!';
+  const cols = ['#ff6b35','#ff3b30','#ff8c00','#fffb00','#00ffc8'];
+  el.textContent = msg;
+  el.style.color = cols[Math.min(n-2, cols.length-1)];
+  el.style.opacity = '1';
+  el.style.transform = 'translateX(-50%) scale(1.1)';
+  setTimeout(() => { el.style.transform = 'translateX(-50%) scale(1)'; }, 150);
+  clearTimeout(comboHideTimer);
+  comboHideTimer = setTimeout(() => { el.style.opacity = '0'; }, 900);
+}
+
+// ═══════════════════════════════════════
+//  PERSIST
+// ═══════════════════════════════════════
+function persist() { localStorage.setItem('td_save', JSON.stringify(saveData)); }
+
+// ═══════════════════════════════════════
+//  PANEL TOGGLES
+// ═══════════════════════════════════════
+document.getElementById('missions-toggle').addEventListener('click', () => {
+  document.getElementById('missions-panel').classList.toggle('open');
+});
+document.getElementById('rank-toggle').addEventListener('click', () => {
+  document.getElementById('rank-panel').classList.toggle('open');
+  updateRankPanel();
+});
+document.getElementById('skip-unlock').addEventListener('click', () => {
+  document.getElementById('unlock-overlay').classList.remove('show');
+});
+
+// ═══════════════════════════════════════
+//  START BUTTON
+// ═══════════════════════════════════════
+document.getElementById('hs-val').textContent = saveData.highScore;
+document.getElementById('btn-start').addEventListener('click', () => {
+  document.getElementById('o-start').classList.add('hidden');
+  showStory(0, () => { S.started = true; startLevelEngine(window._scene); });
+});
+document.getElementById('btn-retry').addEventListener('click', () => {
+  document.getElementById('gameover-overlay').classList.remove('show');
+  document.getElementById('o-start').classList.remove('hidden');
+  document.getElementById('hs-val').textContent = saveData.highScore;
+  resetSession();
+});
+
+// ═══════════════════════════════════════
+//  PHASER
+// ═══════════════════════════════════════
+let bullets, scavengers, defenders, spawnTimer;
+let lightText, chargeText, scoreText, levelText, progFill, progText, xpText;
+let cardBgs = {};
+let defTimers = [];
+let bossBarBg, bossBar, bossLabel;
+const GRID = { startX:45, startY:178, cW:72, cH:72 };
+
+const config = {
+  type: Phaser.AUTO, width:450, height:780, parent:'gc',
+  backgroundColor:'#040b18',
+  physics:{ default:'arcade', arcade:{ debug:false } },
+  scene:{ preload, create, update }
+};
+new Phaser.Game(config);
+
+function preload() {}
+
+function create() {
+  const sc = this;
+  window._scene = sc;
+  bullets    = sc.physics.add.group();
+  scavengers = sc.physics.add.group();
+  defenders  = sc.physics.add.group();
+
+  drawBackground(sc);
+  buildGrid(sc);
+  buildHUD(sc);
+  buildCardDeck(sc);
+  buildBossBar(sc);
+  setupCombat(sc);
+  spawnAmbientBubbles(sc);
+
+  // Ambient orb timer
+  sc.time.addEvent({ delay:5200, loop:true, callback:() => {
+    if (!S.started || S.paused) return;
+    spawnOrb(sc, Phaser.Math.Between(40,410), Phaser.Math.Between(178,560));
+  }});
+
+  // Power surge timer
+  sc.time.addEvent({ delay:28000, loop:true, callback:() => {
+    if (!S.started || S.paused || S.surgeActive) return;
+    activateSurge(sc);
+  }});
+
+  initMissions();
+  updateRankPanel();
+  updateUI();
+}
+
+// ── BACKGROUND ──
+function drawBackground(sc) {
+  let g = sc.add.graphics();
+  g.fillGradientStyle(0x020714,0x020714,0x031525,0x031525,1);
+  g.fillRect(0,0,450,780);
+  g.lineStyle(1,0x00f2fe,0.022);
+  for (let i=0;i<=450;i+=45) g.strokeLineShape(new Phaser.Geom.Line(i,0,i,780));
+  // Reef floor
+  let f = sc.add.graphics();
+  f.fillGradientStyle(0x00ffc8,0x00ffc8,0x031525,0x031525,0,0,0.07,0.07);
+  f.fillRect(0,598,450,32);
+  // Reef guard text area
+  let rb = sc.add.graphics();
+  rb.fillGradientStyle(0x020a14,0x020a14,0x001f18,0x001f18,0.96);
+  rb.fillRect(0,630,450,62);
+  rb.lineStyle(1,0x00ffc8,0.25);
+  rb.strokeLineShape(new Phaser.Geom.Line(0,630,450,630));
+  sc.add.text(225,661,'🛡️  MOTHER REEF SHIELD ACTIVE',{fontSize:'11px',fill:'#00ffc8',fontWeight:'700',letterSpacing:2}).setOrigin(0.5);
+}
+
+function spawnAmbientBubbles(sc) {
+  for (let i=0;i<22;i++) {
+    let bx=Phaser.Math.Between(10,440), by=Phaser.Math.Between(140,640);
+    let r=Phaser.Math.Between(2,5);
+    let b=sc.add.circle(bx,by,r,0x00f2fe,0.1+Math.random()*0.1);
+    sc.tweens.add({ targets:b, y:by-Phaser.Math.Between(70,180), alpha:0,
+      duration:3500+Math.random()*4000, delay:Math.random()*5000, repeat:-1,
+      repeatDelay:Math.random()*2000,
+      onRepeat:()=>{ b.x=Phaser.Math.Between(10,440); b.y=by; b.setAlpha(0.1+Math.random()*0.1); }
+    });
+  }
+}
+
+// ── GRID ──
+function buildGrid(sc) {
+  for (let row=0;row<6;row++) {
+    for (let col=0;col<5;col++) {
+      let x=GRID.startX+col*GRID.cW, y=GRID.startY+row*GRID.cH;
+      let cg=sc.add.graphics();
+      drawCell(cg,x,y,false);
+      let z=sc.add.zone(x,y,GRID.cW,GRID.cH).setInteractive();
+      z.setData({occupied:false,col,row,cellGfx:cg});
+      z.on('pointerover',()=>{ if(!z.getData('occupied')) drawCell(cg,x,y,true); });
+      z.on('pointerout', ()=>{ if(!z.getData('occupied')) drawCell(cg,x,y,false); });
+      z.on('pointerdown',()=>placeDefender(sc,z,x,y));
     }
+  }
 
-    function spawnOrb(scene, x, y) {
-        let orb = scene.add.circle(x, y, 14, 0xfffb00).setInteractive();
-        scene.physics.add.existing(orb);
-        orb.body.setAllowGravity(false);
+  // Depth charge lane zones (bottom strip)
+  for (let col=0;col<5;col++) {
+    let lx=GRID.startX+col*GRID.cW;
+    let dcz=sc.add.zone(lx,602,GRID.cW-4,22).setInteractive();
+    dcz.on('pointerdown',()=>detonateCol(sc,col));
+  }
+  sc.add.text(225,612,'💥 TAP BOTTOM OF LANE FOR DEPTH CHARGE',
+    {fontSize:'7px',fill:'#ff6b35',fontWeight:'700',letterSpacing:1}).setOrigin(0.5).setAlpha(0.45);
+}
 
-        scene.tweens.add({
-            targets: orb,
-            alpha: 0.3, scale: 1.2,
-            duration: 800, yoyo: true, repeat: -1
-        });
+function drawCell(g,x,y,hover) {
+  g.clear();
+  g.fillStyle(0x00f2fe, hover?0.06:0.01);
+  g.fillRoundedRect(x-GRID.cW/2+3,y-GRID.cH/2+3,GRID.cW-6,GRID.cH-6,6);
+  g.lineStyle(1,0x00f2fe, hover?0.3:0.07);
+  g.strokeRoundedRect(x-GRID.cW/2+3,y-GRID.cH/2+3,GRID.cW-6,GRID.cH-6,6);
+}
 
-        orb.on('pointerdown', () => {
-            lightOrbs += 25;
-            updateUISlice();
-            orb.destroy();
-        });
+// ── PLACE DEFENDER ──
+function placeDefender(sc,zone,x,y) {
+  if (!S.started || S.paused || zone.getData('occupied')) return;
+  const def = DEFENDERS.find(d=>d.id===S.selected);
+  if (!def || !saveData.unlockedDefenders.includes(def.id)) return;
+  if (S.orbs < def.cost) { sc.cameras.main.shake(120,0.004); showToast('❌ Not enough orbs!'); return; }
+
+  S.orbs -= def.cost;
+  zone.setData('occupied',true);
+  zone.getData('cellGfx').clear();
+
+  const hp = def.id==='clam' ? upg.clamHp : def.id==='shark' ? upg.sharkHp : def.hp;
+  let txt = sc.add.text(x,y,def.icon,{fontSize:'30px'}).setOrigin(0.5);
+  sc.physics.add.existing(txt);
+  txt.setData({hp,maxHp:hp,type:def.id,gridZone:zone,eating:false,col:zone.getData('col')});
+  defenders.add(txt);
+  txt.setScale(0);
+  sc.tweens.add({targets:txt,scaleX:1,scaleY:1,duration:220,ease:'Back.easeOut'});
+
+  // HP bar
+  let hpBg=sc.add.graphics(), hpBar=sc.add.graphics();
+  txt.setData({hpBg,hpBar});
+  redrawHpBar(hpBg,hpBar,x,y,1);
+
+  // Ability timers
+  if (def.id==='seahorse') {
+    let t=sc.time.addEvent({ delay:upg.bulletRate, loop:true, callback:()=>{
+      if(!txt.active){t.destroy();return;}
+      fireBullet(sc,x,y-18,false);
+    }});
+    defTimers.push(t);
+  } else if (def.id==='coral') {
+    let t=sc.time.addEvent({ delay:upg.coralRate, loop:true, callback:()=>{
+      if(!txt.active){t.destroy();return;}
+      spawnOrb(sc,x+Phaser.Math.Between(-12,12),y+Phaser.Math.Between(-12,12));
+    }});
+    defTimers.push(t);
+  } else if (def.id==='pufferfish') {
+    let t=sc.time.addEvent({ delay:2800, loop:true, callback:()=>{
+      if(!txt.active){t.destroy();return;}
+      puffBlast(sc,x,y,zone.getData('col'));
+    }});
+    defTimers.push(t);
+  } else if (def.id==='shark') {
+    let t=sc.time.addEvent({ delay:5000, loop:true, callback:()=>{
+      if(!txt.active){t.destroy();return;}
+      sharkCharge(sc,txt,x,zone.getData('row'));
+    }});
+    defTimers.push(t);
+  }
+  updateUI();
+}
+
+// ── HUD ──
+function buildHUD(sc) {
+  let h=sc.add.graphics();
+  h.fillStyle(0x020611,0.97); h.fillRect(0,0,450,120);
+  h.lineStyle(1,0x00f2fe,0.1); h.strokeLineShape(new Phaser.Geom.Line(0,120,450,120));
+  h.lineStyle(1,0x00f2fe,0.05); h.strokeLineShape(new Phaser.Geom.Line(205,10,205,98));
+
+  lightText  = sc.add.text(18,16,'✨ 150',{fontSize:'22px',fill:'#fffb00',fontWeight:'800'});
+  chargeText = sc.add.text(18,52,'💥 2 Charges',{fontSize:'12px',fill:'#ff6b35',fontWeight:'700'});
+  scoreText  = sc.add.text(18,76,'🏆 0',{fontSize:'11px',fill:'#4a6080',fontWeight:'600'});
+
+  levelText  = sc.add.text(432,14,'LEVEL 1',{fontSize:'18px',fill:'#00f2fe',fontWeight:'900',letterSpacing:1}).setOrigin(1,0);
+  sc.add.text(432,50,'WAVE PROGRESS',{fontSize:'8px',fill:'#283850',fontWeight:'700',letterSpacing:1}).setOrigin(1,0);
+
+  let pbg=sc.add.graphics();
+  pbg.fillStyle(0x101825,1); pbg.fillRoundedRect(212,62,218,7,3);
+  progFill=sc.add.graphics();
+  progText=sc.add.text(432,76,'0/10',{fontSize:'9px',fill:'#2a4060',fontWeight:'700'}).setOrigin(1,0);
+  xpText  =sc.add.text(432,92,'XP: +0',{fontSize:'9px',fill:'#4a3010',fontWeight:'700'}).setOrigin(1,0);
+
+  // Unlock button
+  let unlockBtn = sc.add.text(225,105,'🔓 ARSENAL',{fontSize:'9px',fill:'#00ffc8',fontWeight:'700',letterSpacing:2}).setOrigin(0.5).setInteractive();
+  unlockBtn.on('pointerdown',()=>{
+    buildUnlockGrid();
+    document.getElementById('unlock-overlay').classList.add('show');
+  });
+}
+
+// ── BOSS BAR ──
+function buildBossBar(sc) {
+  bossBarBg=sc.add.graphics().setVisible(false);
+  bossBar  =sc.add.graphics().setVisible(false);
+  bossLabel=sc.add.text(225,140,'👾 BOSS',{fontSize:'10px',fill:'#ff3b30',fontWeight:'800',letterSpacing:3}).setOrigin(0.5).setVisible(false);
+}
+function updateBossBar(hp,max) {
+  bossBarBg.clear(); bossBar.clear();
+  bossBarBg.fillStyle(0x101825,1); bossBarBg.fillRoundedRect(55,130,340,10,5);
+  let r=Math.max(0,hp/max), col=r>.5?0xff3b30:r>.2?0xff8c00:0xffdd00;
+  bossBar.fillStyle(col,1); bossBar.fillRoundedRect(55,130,340*r,10,5);
+}
+
+// ── CARD DECK ──
+let cardObjects = {};
+function buildCardDeck(sc) {
+  // Clear old cards
+  if (cardObjects._container) cardObjects._container.destroy();
+  cardObjects = {};
+
+  let deckBg=sc.add.graphics();
+  deckBg.fillStyle(0x020611,1); deckBg.fillRect(0,695,450,85);
+  deckBg.lineStyle(1,0x00f2fe,0.08); deckBg.strokeLineShape(new Phaser.Geom.Line(0,695,450,695));
+
+  const owned = DEFENDERS.filter(d=>saveData.unlockedDefenders.includes(d.id));
+  const slots = [75,225,375];
+  owned.slice(0,3).forEach((def,i) => {
+    let cx=slots[i], cy=738;
+    let bg=sc.add.graphics();
+    let lbl=sc.add.text(cx,cy-12,def.icon,{fontSize:'24px'}).setOrigin(0.5);
+    let n  =sc.add.text(cx,cy+10,def.name,{fontSize:'7px',fill:'#4a7090',fontWeight:'700',letterSpacing:1}).setOrigin(0.5);
+    let c  =sc.add.text(cx,cy+22,def.cost+' ORB',{fontSize:'9px',fill:'#fffb00',fontWeight:'800'}).setOrigin(0.5);
+    cardBgs[def.id]=bg;
+    sc.add.zone(cx,cy,88,64).setInteractive().on('pointerdown',()=>{
+      S.selected=def.id;
+      updateUI();
+    });
+  });
+}
+
+// ── COMBAT ──
+function setupCombat(sc) {
+  sc.physics.add.overlap(bullets,scavengers,(bullet,enemy)=>{
+    let hx=bullet.x,hy=bullet.y;
+    let dmg=bullet.getData('dmg')||upg.bulletDmg;
+    let isCrit=Math.random()<0.2;
+    if(isCrit){dmg=Math.round(dmg*2.2);S.crits++;saveData.totalCrits++;updateMissionProgress('crits',1);}
+    bullet.destroy();
+    impactRing(sc,hx,hy,isCrit);
+    let hp=enemy.getData('hp')-dmg;
+    enemy.setData('hp',hp);
+    enemy.setTint(isCrit?0xffa500:0xff3b30);
+    sc.time.delayedCall(80,()=>{if(enemy.active)enemy.clearTint();});
+    floatText(sc,hx,hy,(isCrit?'💥 ':'-')+dmg,isCrit?'#ffa500':'#ff3b30',isCrit?'17px':'13px');
+    if(enemy.getData('slowed')&&enemy.getData('slowTimer')){}
+    if(hp<=0) killEnemy(sc,enemy);
+    else {
+      // Update boss bar
+      if(enemy.getData('boss')) updateBossBar(hp,enemy.getData('maxHp'));
     }
+  });
 
-    function drawCardBackground(gfx, isSelected, canAfford) {
-        gfx.clear();
-        let strokeColor = isSelected ? 0x00f2fe : 0x182438;
-        let strokeAlpha = isSelected ? 1 : 0.6;
-        let fillColor = canAfford ? 0x0a1626 : 0x060c14;
+  sc.physics.add.overlap(scavengers,defenders,(enemy,def)=>{
+    if(enemy.getData('eating'))return;
+    enemy.body.setVelocityY(0);
+    enemy.setData('eating',true);
+    let bt=sc.time.addEvent({ delay:900, loop:true, callback:()=>{
+      if(!def.active||!enemy.active){
+        bt.destroy();
+        if(enemy.active){enemy.setData('eating',false);enemy.body.setVelocityY(enemy.getData('speed'));}
+        return;
+      }
+      let dh=def.getData('hp')-22; def.setData('hp',dh);
+      let mh=def.getData('maxHp');
+      let gz=def.getData('gridZone');
+      let hbg=def.getData('hpBg'), hbr=def.getData('hpBar');
+      if(hbg&&hbr) redrawHpBar(hbg,hbr,gz.x,gz.y,Math.max(0,dh/mh));
+      def.setTint(0xff3b30); sc.time.delayedCall(60,()=>{if(def.active)def.clearTint();});
+      if(dh<=0){
+        def.getData('gridZone').setData('occupied',false);
+        def.getData('gridZone').getData('cellGfx').clear();
+        drawCell(def.getData('gridZone').getData('cellGfx'),gz.x,gz.y,false);
+        if(hbg)hbg.destroy(); if(hbr)hbr.destroy();
+        def.destroy(); bt.destroy();
+        if(enemy.active){enemy.setData('eating',false);enemy.body.setVelocityY(enemy.getData('speed'));}
+      }
+    }});
+  });
+}
 
-        gfx.fillStyle(fillColor, 1);
-        gfx.fillRoundedRect(-41, -30, 82, 60, 8);
-        gfx.lineStyle(isSelected ? 2 : 1, strokeColor, strokeAlpha);
-        gfx.strokeRoundedRect(-41, -30, 82, 60, 8);
+function killEnemy(sc,enemy) {
+  if(!enemy.active)return;
+  let ex=enemy.x,ey=enemy.y;
+  let isBoss=enemy.getData('boss');
+  enemy.destroy();
+  S.totalKilled++;
+  S.enemiesKilled++;
+  score_add(sc,15);
+  saveData.totalKills++;
+  addXP(isBoss?50:10);
+  updateMissionProgress('kills',1);
+
+  // Streak
+  S.streak++;
+  if(S.streak>S.bestStreak){ S.bestStreak=S.streak; updateMissionProgress('combo',S.streak); }
+  if(S.streakTimer) S.streakTimer.destroy();
+  if(S.streak>=2) showComboDisplay(S.streak);
+  if(S.streak>=3){
+    let bonus=Math.floor(S.streak/2)*8;
+    S.orbs+=bonus;
+    floatText(sc,ex,ey-28,'+'+bonus+' ORB!','#fffb00','13px');
+  }
+  S.streakTimer=sc.time.delayedCall(2200,()=>{S.streak=0;});
+
+  // Particles
+  for(let i=0;i<6;i++){
+    let dot=sc.add.circle(ex,ey,3,isBoss?0xffa500:0x00ffc8,0.9);
+    sc.tweens.add({targets:dot,
+      x:ex+Phaser.Math.Between(-50,50),y:ey+Phaser.Math.Between(-50,50),
+      alpha:0,scale:0,duration:550,onComplete:()=>dot.destroy()});
+  }
+
+  updateUI();
+
+  if(isBoss){
+    S.bossActive=false;
+    bossBarBg.setVisible(false);bossBar.setVisible(false);bossLabel.setVisible(false);
+    S.orbs+=80; sc.cameras.main.shake(300,0.014);
+    floatText(sc,225,350,'🎉 BOSS DOWN! +80 ORBS','#00ffc8','20px');
+    showToast('🎉 Boss defeated! +80 Orbs');
+    sc.time.delayedCall(1800,()=>advanceLevel(sc));
+    return;
+  }
+  if(S.enemiesKilled>=S.enemiesInLevel&&!S.bossActive) advanceLevel(sc);
+}
+
+// ── SPECIAL ABILITIES ──
+function puffBlast(sc,x,y,col) {
+  let lx=GRID.startX+col*GRID.cW;
+  let wave=sc.add.rectangle(lx,y,GRID.cW-4,600,0x00b4d8,0.12).setDepth(8);
+  sc.tweens.add({targets:wave,alpha:0,scaleY:1.1,duration:500,onComplete:()=>wave.destroy()});
+  scavengers.getChildren().forEach(e=>{
+    if(!e.active)return;
+    if(Math.abs(e.x-lx)<38){
+      let hp=e.getData('hp')-upg.puffDmg;
+      e.setData('hp',hp);
+      e.setTint(0x00b4d8);
+      sc.time.delayedCall(100,()=>{if(e.active)e.clearTint();});
+      if(hp<=0) killEnemy(sc,e);
     }
+  });
+}
 
-    function updateUISlice() {
-        if (!lightText) return;
+function sharkCharge(sc,defTxt,x,row) {
+  // Flash and clear a whole row
+  let ry=GRID.startY+row*GRID.cH;
+  let slash=sc.add.rectangle(225,ry,450,GRID.cH-6,0xffa500,0.15).setDepth(9);
+  sc.tweens.add({targets:slash,alpha:0,duration:400,onComplete:()=>slash.destroy()});
+  sc.cameras.main.shake(120,0.006);
+  scavengers.getChildren().forEach(e=>{
+    if(!e.active)return;
+    if(Math.abs(e.y-ry)<40) killEnemy(sc,e);
+  });
+}
 
-        lightText.setText('✨ ' + lightOrbs);
-        scoreText.setText('🏆 ' + score);
-        levelText.setText('LEVEL ' + currentLevel);
+function jellyEffect(sc,enemy) {
+  if(enemy.getData('slowed'))return;
+  enemy.setData('slowed',true);
+  let oldSpd=enemy.getData('speed');
+  let newSpd=Math.round(oldSpd*(1-upg.jellySlowPower));
+  enemy.body.setVelocityY(newSpd);
+  enemy.setTint(0x9b59b6);
+  let st=sc.time.delayedCall(3000,()=>{
+    if(enemy.active){enemy.body.setVelocityY(oldSpd);enemy.clearTint();enemy.setData('slowed',false);}
+  });
+  enemy.setData('slowTimer',st);
+}
 
-        progressBarFill.clear();
-        progressBarFill.fillStyle(0x00f2fe, 1);
-        let ratio = Math.min(1, enemiesDefeatedInLevel / totalEnemiesInLevel);
-        progressBarFill.fillRoundedRect(25, 88, 400 * ratio, 6, 3);
+// ── BULLETS ──
+function fireBullet(sc,x,y,isSurge) {
+  let b=sc.add.circle(x,y,5,0x00f2fe);
+  sc.physics.add.existing(b);
+  b.setData('dmg',isSurge?Math.round(upg.bulletDmg*1.5):upg.bulletDmg);
+  bullets.add(b);
+  b.body.setVelocityY(-upg.bulletSpeed);
+  let ring=sc.add.circle(x,y,9,0x00f2fe,0.18);
+  sc.tweens.add({targets:ring,scaleX:2,scaleY:2,alpha:0,duration:200,onComplete:()=>ring.destroy()});
+}
 
-        if (bg1) drawCardBackground(bg1, currentSelection === 'seahorse', lightOrbs >= 50);
-        if (bg2) drawCardBackground(bg2, currentSelection === 'coral', lightOrbs >= 25);
-        if (bg3) drawCardBackground(bg3, currentSelection === 'clam', lightOrbs >= 75);
+function impactRing(sc,x,y,crit) {
+  let c=crit?0xffa500:0x00f2fe;
+  let r=sc.add.circle(x,y,4,c,0.7);
+  sc.tweens.add({targets:r,scaleX:crit?4:3,scaleY:crit?4:3,alpha:0,duration:crit?350:220,onComplete:()=>r.destroy()});
+}
+
+function floatText(sc,x,y,msg,col,sz) {
+  let t=sc.add.text(x,y,msg,{fontSize:sz||'13px',fill:col||'#fff',fontWeight:'800'}).setOrigin(0.5).setDepth(15);
+  sc.tweens.add({targets:t,y:y-45,alpha:0,duration:750,onComplete:()=>t.destroy()});
+}
+
+// ── HP BAR ──
+function redrawHpBar(bg,bar,x,y,ratio) {
+  bg.clear();bar.clear();
+  let W=36,H=4;
+  bg.fillStyle(0x101825,1);bg.fillRoundedRect(x-W/2,y+18,W,H,2);
+  let col=ratio>.5?0x00ffc8:ratio>.25?0xffb800:0xff3b30;
+  bar.fillStyle(col,1);bar.fillRoundedRect(x-W/2,y+18,W*ratio,H,2);
+}
+
+// ── ORBS ──
+function spawnOrb(sc,x,y) {
+  let orb=sc.add.circle(x,y,13,0xfffb00).setInteractive().setDepth(6);
+  sc.physics.add.existing(orb);orb.body.setAllowGravity(false);
+  let ring=sc.add.circle(x,y,20,0xfffb00,0.13).setDepth(5);
+  sc.tweens.add({targets:orb,scaleX:1.2,scaleY:1.2,alpha:.6,duration:700,yoyo:true,repeat:-1});
+  sc.tweens.add({targets:ring,scaleX:1.7,scaleY:1.7,alpha:0,duration:900,repeat:-1,
+    repeatDelay:400,onRepeat:()=>{ring.setScale(1);ring.setAlpha(0.13);}});
+  orb.on('pointerdown',()=>{
+    S.orbs+=upg.orbValue;
+    S.orbsCollected+=upg.orbValue;
+    updateMissionProgress('orbs',upg.orbValue);
+    updateUI();
+    orb.destroy();ring.destroy();
+    floatText(sc,x,y-18,'+'+upg.orbValue,'#fffb00','14px');
+  });
+  sc.time.delayedCall(9000,()=>{if(orb.active){orb.destroy();ring.destroy();}});
+}
+
+// ── DEPTH CHARGE ──
+function detonateCol(sc,col) {
+  if(S.depthCharges<=0){showToast('❌ No depth charges left!');return;}
+  if(!S.started||S.paused)return;
+  S.depthCharges--;
+  updateUI();
+  let lx=GRID.startX+col*GRID.cW;
+  let sw=sc.add.rectangle(lx,390,GRID.cW,780,0xff6b35,0.18).setDepth(16);
+  sc.tweens.add({targets:sw,alpha:0,scaleY:1.3,duration:650,onComplete:()=>sw.destroy()});
+  sc.cameras.main.shake(220,0.012);
+  floatText(sc,lx,300,'💥 DEPTH CHARGE!','#ff6b35','16px');
+  scavengers.getChildren().forEach(e=>{
+    if(!e.active)return;
+    if(Math.abs(e.x-lx)<40) killEnemy(sc,e);
+  });
+}
+
+// ── POWER SURGE ──
+function activateSurge(sc) {
+  S.surgeActive=true;
+  const banner=document.getElementById('surge-banner');
+  const timer =document.getElementById('surge-timer');
+  banner.classList.add('active');
+  let secs=10;
+  timer.style.opacity='1';
+  timer.textContent='⚡ '+secs+'s';
+  // Double all defender fire rates temporarily
+  showToast('⚡ POWER SURGE! Double fire rate for 10s!');
+  defenders.getChildren().forEach(d=>{
+    if(d.getData('type')==='seahorse'){
+      let t=sc.time.addEvent({delay:Math.round(upg.bulletRate*0.45),loop:true,callback:()=>{
+        if(!d.active){t.destroy();return;}
+        fireBullet(sc,d.x,d.y-18,true);
+      }});
+      d.setData('surgeTimer',t);
     }
+  });
+  S.surgeTimer=sc.time.addEvent({delay:1000,loop:true,callback:()=>{
+    secs--;
+    timer.textContent='⚡ '+secs+'s';
+    if(secs<=0){
+      S.surgeActive=false;
+      banner.classList.remove('active');
+      timer.style.opacity='0';
+      S.surgeTimer.destroy();
+      // Remove surge timers
+      defenders.getChildren().forEach(d=>{
+        let st=d.getData('surgeTimer');
+        if(st){st.destroy();d.setData('surgeTimer',null);}
+      });
+    }
+  }});
+}
 
-    function update() {
-        bullets.getChildren().forEach(b => {
-            if (b && b.y < 120) b.destroy();
+// ── LEVEL ENGINE ──
+function startLevelEngine(sc) {
+  S.paused=false;
+  S.bossActive=false;
+  S.enemiesInLevel=8+S.level*4;
+  S.enemiesKilled=0;
+  S.spawned=0;
+  updateUI();
+
+  const isBossLevel=S.level%5===0;
+  if(isBossLevel) S.enemiesInLevel=6+S.level;
+
+  const delay=Math.max(1100,4200-S.level*320);
+  if(spawnTimer) spawnTimer.destroy();
+  spawnTimer=sc.time.addEvent({delay,loop:true,callback:()=>{
+    if(!S.started||S.paused)return;
+    if(S.spawned>=S.enemiesInLevel)return;
+
+    let col=Phaser.Math.Between(0,4);
+    let ex=GRID.startX+col*GRID.cW;
+    let roll=Math.random();
+    let emoji,hp,spd,reward;
+    if(roll<0.05+S.level*0.01){ emoji='🪖';hp=210+S.level*18;spd=16+S.level*2;reward=30; }
+    else if(roll<0.15+S.level*0.04){ emoji='📦';hp=120+S.level*12;spd=24+S.level*2;reward=20; }
+    else{ emoji='🦀';hp=44+S.level*5;spd=38+S.level*2;reward=15; }
+
+    spawnEnemy(sc,ex,emoji,hp,spd,false);
+    S.spawned++;
+
+    // Check jelly slows
+    defenders.getChildren().forEach(d=>{
+      if(d.getData('type')==='jellyfish'){
+        scavengers.getChildren().forEach(e=>{
+          if(e.active&&Math.abs(e.x-d.x)<40) jellyEffect(sc,e);
         });
+      }
+    });
+  }});
 
-        scavengers.getChildren().forEach(e => {
-            if (e && e.y > 630) {
-                e.destroy();
-                alert('Trench Overrun! Defeat at Level ' + currentLevel + '.\nFinal Score: ' + score);
-                location.reload();
-            }
-        });
+  if(isBossLevel){
+    sc.time.delayedCall(Math.max(1100,4200-S.level*320)*(S.enemiesInLevel+2),()=>{
+      if(!S.bossActive&&!S.paused) spawnBoss(sc);
+    });
+  }
+}
+
+function spawnEnemy(sc,x,emoji,hp,spd,isBoss) {
+  let sz=isBoss?'48px':'28px';
+  let e=sc.add.text(x,isBoss?140:-28,emoji,{fontSize:sz}).setOrigin(0.5);
+  sc.physics.add.existing(e);
+  e.setData({hp,maxHp:hp,speed:spd,eating:false,boss:!!isBoss,slowed:false});
+  scavengers.add(e);
+  e.body.setVelocityY(spd);
+}
+
+function spawnBoss(sc) {
+  if(S.bossActive)return;
+  S.bossActive=true;
+  let bossHp=400+S.level*80;
+  spawnEnemy(sc,225,'👾',bossHp,22+S.level*2,true);
+  bossBarBg.setVisible(true);bossBar.setVisible(true);bossLabel.setVisible(true);
+  bossBarBg.setAlpha(0);bossBar.setAlpha(0);bossLabel.setAlpha(0);
+  sc.tweens.add({targets:[bossBarBg,bossBar,bossLabel],alpha:1,duration:400});
+  sc.cameras.main.shake(300,0.012);
+  showToast('👾 BOSS APPEARS! Unleash everything!');
+  updateBossBar(bossHp,bossHp);
+  // Show story for boss levels
+  if(S.level===5)  showStory(4,()=>{});
+}
+
+function advanceLevel(sc) {
+  S.paused=true;
+  if(spawnTimer)spawnTimer.destroy();
+  scavengers.clear(true,true);
+  bullets.clear(true,true);
+
+  const prevLevel=S.level;
+  S.level++;
+  updateMissionProgress('level',S.level);
+
+  if(saveData.highScore<S.score){ saveData.highScore=S.score; persist(); }
+  document.getElementById('hs-val').textContent=saveData.highScore;
+
+  // Bonus orbs
+  let bonus=30+S.level*6;
+  S.orbs+=bonus;
+  addXP(30+S.level*5);
+
+  // Show story beats
+  let storyIdx=S.level===3?1:S.level===6?2:S.level===9?3:S.level===12?5:-1;
+
+  const doUpgrade=()=>{
+    if(S.level>2&&S.level%2===0) showUpgradeScreen(sc);
+    else startLevelEngine(sc);
+  };
+
+  // Win animation
+  let winTxt=sc.add.text(225,360,'✅ TRENCH SECURED\nLEVEL '+prevLevel+' COMPLETE\n+'+bonus+' ORBS',
+    {fontSize:'20px',fill:'#00ffc8',align:'center',fontWeight:'900',letterSpacing:1}).setOrigin(0.5).setDepth(20);
+  winTxt.setScale(0);
+  sc.tweens.add({targets:winTxt,scaleX:1,scaleY:1,duration:260,ease:'Back.easeOut'});
+
+  // Check defender unlocks
+  DEFENDERS.forEach(d=>{
+    if(d.unlockAt>0&&d.unlockAt===S.level&&!saveData.unlockedDefenders.includes(d.id)){
+      sc.time.delayedCall(800,()=>{
+        showToast(`🔓 ${d.name} unlocked! Check Arsenal.`);
+        buildCardDeck(sc);
+      });
     }
+  });
+
+  sc.time.delayedCall(2500,()=>{
+    winTxt.destroy();
+    if(storyIdx>=0&&!S.storyShown[storyIdx]) showStory(storyIdx,doUpgrade);
+    else doUpgrade();
+  });
+}
+
+// ── UPGRADE SCREEN ──
+function showUpgradeScreen(sc) {
+  const ALL_UPGS=[
+    {icon:'⚡',name:'PLASMA ROUNDS',desc:'Bullet damage +60%',cost:30,free:false,apply:()=>{upg.bulletDmg=Math.round(upg.bulletDmg*1.6);}},
+    {icon:'🔫',name:'RAPID FIRE',desc:'Fire rate 30% faster',cost:40,apply:()=>{upg.bulletRate=Math.round(upg.bulletRate*.7);}},
+    {icon:'💨',name:'VELOCITY BOOST',desc:'Bullet speed +40%',cost:25,apply:()=>{upg.bulletSpeed=Math.round(upg.bulletSpeed*1.4);}},
+    {icon:'✨',name:'ORB MAGNET',desc:'Orbs give +15 each',cost:20,apply:()=>{upg.orbValue+=15;}},
+    {icon:'🪸',name:'CORAL BLOOM',desc:'Coral spawns orbs 30% faster',cost:35,apply:()=>{upg.coralRate=Math.round(upg.coralRate*.7);}},
+    {icon:'🦪',name:'TITAN SHELL',desc:'Clam HP +120',cost:50,apply:()=>{upg.clamHp+=120;}},
+    {icon:'💥',name:'DEPTH CHARGE',desc:'+1 Depth Charge',cost:0,free:true,apply:()=>{S.depthCharges++;updateUI();}},
+    {icon:'💰',name:'ORB CACHE',desc:'Instantly +60 orbs',cost:0,free:true,apply:()=>{S.orbs+=60;updateUI();}},
+    {icon:'🐡',name:'PUFF UPGRADE',desc:'Pufferfish blast +50% dmg',cost:45,apply:()=>{upg.puffDmg=Math.round(upg.puffDmg*1.5);}},
+    {icon:'🦈',name:'SHARK FRENZY',desc:'Shark cooldown -1s',cost:55,apply:()=>{}},
+    {icon:'🪼',name:'DEEP CHILL',desc:'Jellyfish slow +20%',cost:35,apply:()=>{upg.jellySlowPower=Math.min(0.85,upg.jellySlowPower+0.2);}},
+  ];
+
+  document.getElementById('upg-level-tag').textContent='LEVEL '+(S.level-1)+' COMPLETE';
+  document.getElementById('upg-orbs').textContent='✨ '+S.orbs+' Orbs';
+
+  const row=document.getElementById('upgrade-row');
+  row.innerHTML='';
+  const picks=[...ALL_UPGS].sort(()=>Math.random()-.5).slice(0,3);
+  picks.forEach(u=>{
+    const card=document.createElement('div');
+    card.className='upg-card'+(u.free?' free':'');
+    card.innerHTML=`<div class="ui">${u.icon}</div><div class="un">${u.name}</div>
+      <div class="ud">${u.desc}</div><div class="uc">${u.free?'FREE':u.cost+' ORBs'}</div>`;
+    card.addEventListener('click',()=>{
+      if(!u.free&&S.orbs<u.cost){card.style.border='1px solid rgba(255,60,60,0.6)';setTimeout(()=>card.style.border='',500);return;}
+      if(!u.free) S.orbs-=u.cost;
+      u.apply();
+      document.getElementById('upgrade-overlay').classList.remove('show');
+      startLevelEngine(sc);
+    });
+    row.appendChild(card);
+  });
+
+  document.getElementById('skip-upg').onclick=()=>{
+    document.getElementById('upgrade-overlay').classList.remove('show');
+    startLevelEngine(sc);
+  };
+  document.getElementById('upgrade-overlay').classList.add('show');
+}
+
+// ── SCORE ──
+function score_add(sc,n) {
+  S.score=(S.score||0)+n;
+  updateMissionProgress('score',n);
+  updateUI();
+}
+
+// ── GAME OVER ──
+function gameOver(sc) {
+  S.paused=true;
+  if(spawnTimer)spawnTimer.destroy();
+  scavengers.clear(true,true);
+  sc.cameras.main.shake(500,0.02);
+
+  if(S.score>saveData.highScore){saveData.highScore=S.score;persist();}
+  saveData.totalKills+=S.totalKilled;
+  persist();
+
+  const ri=getRank(saveData.totalXP);
+  document.getElementById('go-rank-icon').textContent=RANKS[ri].icon;
+  document.getElementById('go-rank-name').textContent=RANKS[ri].name;
+  document.getElementById('go-rank-sub').textContent='Final Rank Achieved';
+  document.getElementById('go-score').textContent=S.score;
+  document.getElementById('go-level').textContent=S.level;
+  document.getElementById('go-kills').textContent=S.totalKilled;
+  document.getElementById('go-crits').textContent=S.crits;
+  document.getElementById('go-combo').textContent=S.bestStreak+'x';
+  document.getElementById('go-orbs').textContent=S.orbsCollected;
+  document.getElementById('go-pb').textContent=saveData.highScore;
+
+  sc.time.delayedCall(800,()=>{
+    document.getElementById('gameover-overlay').classList.add('show');
+  });
+}
+
+function resetSession() {
+  S={ orbs:150,score:0,level:1,killed:0,totalKilled:0,crits:0,orbsCollected:0,
+      streak:0,bestStreak:0,streakTimer:null,depthCharges:2,xpGained:0,
+      selected:'seahorse',paused:false,started:false,surgeActive:false,
+      surgeTimer:null,enemiesInLevel:10,enemiesKilled:0,spawned:0,bossActive:false,storyShown:{} };
+  upg={ bulletDmg:25,bulletSpeed:380,bulletRate:1400,orbValue:25,coralRate:4500,
+        clamHp:450,jellySlowPower:0.5,puffDmg:35,sharkHp:200 };
+  const sc=window._scene;
+  defenders.getChildren().forEach(d=>{
+    if(d.getData('hpBg'))d.getData('hpBg').destroy();
+    if(d.getData('hpBar'))d.getData('hpBar').destroy();
+  });
+  defenders.clear(true,true);bullets.clear(true,true);
+  defTimers.forEach(t=>t.destroy());defTimers=[];
+  bossBarBg.setVisible(false);bossBar.setVisible(false);bossLabel.setVisible(false);
+  updateUI();
+}
+
+// ── UI UPDATE ──
+function updateUI() {
+  if(!lightText)return;
+  lightText.setText('✨ '+S.orbs);
+  chargeText.setText('💥 '+S.depthCharges+' Charge'+(S.depthCharges!==1?'s':''));
+  scoreText.setText('🏆 '+(S.score||0)+'   ⭐ Best: '+saveData.highScore);
+  levelText.setText('LEVEL '+S.level);
+  progText.setText(S.enemiesKilled+' / '+S.enemiesInLevel);
+  xpText.setText('XP: +'+(S.xpGained||0));
+  progFill.clear();
+  progFill.fillStyle(0x00f2fe,1);
+  let r=Math.min(1,S.enemiesKilled/Math.max(1,S.enemiesInLevel));
+  progFill.fillRoundedRect(212,62,218*r,7,3);
+  // Cards
+  DEFENDERS.forEach(d=>{
+    if(cardBgs[d.id]) drawCardBg(cardBgs[d.id],S.selected===d.id,S.orbs>=d.cost);
+  });
+}
+
+function drawCardBg(g,sel,afford) {
+  g.clear();
+  g.fillStyle(afford?0x0a1830:0x06090f,1);
+  g.fillRoundedRect(-45,-33,90,66,10);
+  g.lineStyle(sel?2:1,sel?0x00f2fe:afford?0x1e3050:0x101820,sel?1:afford?.5:.25);
+  g.strokeRoundedRect(-45,-33,90,66,10);
+  if(sel){g.lineStyle(1,0x00f2fe,0.18);g.strokeRoundedRect(-42,-30,84,60,8);}
+}
+
+// ── UPDATE LOOP ──
+function update() {
+  const sc=this;
+  bullets.getChildren().forEach(b=>{if(b&&b.y<120)b.destroy();});
+  scavengers.getChildren().forEach(e=>{
+    if(!e||!e.active)return;
+    if(e.getData('boss')) updateBossBar(e.getData('hp'),e.getData('maxHp'));
+    if(e.y>630){
+      e.destroy();
+      gameOver(sc);
+    }
+  });
+}
 </script>
-
 </body>
 </html>
